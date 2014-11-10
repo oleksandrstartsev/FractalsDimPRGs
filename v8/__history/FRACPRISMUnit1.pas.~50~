@@ -38,6 +38,7 @@ type
     RadioButton3: TRadioButton;
     CheckBox2: TCheckBox;
     RadioButton4: TRadioButton;
+    RadioButton5: TRadioButton;
     procedure ClearButtonClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure FormResize(Sender: TObject);
@@ -618,7 +619,8 @@ v1,v2,v3,v4: integer;
 	    f:=matrix[row+step][col+round(step/2)];
       h:=matrix[row+round(step/2)][col];
 (* o is the center point of four pixel values*)
-      o:=(1.0/8.0)*(a+c+e+g+b+d+f+h);
+    //  o:=(1.0/8.0)*(a+c+e+g+b+d+f+h);
+      o:=matrix[row+round(step/2)][col+round(step/2)];
 (*ab..ha are external sides of the square   *)
 	    ab:=sqrt((a-b)*(a-b)+0.25*side*side);
       bc:=sqrt((b-c)*(b-c)+0.25*side*side);
@@ -693,7 +695,8 @@ if Form1.RadioButton4.Checked then //open a section for Max-diff method;
 	    f:=matrix[row+step][col+v3];
       h:=matrix[row+v4][col];
 (* o is the center point of four pixel values*)
-      o:=(1.0/4.0)*((*a+c+e+g+*)b+d+f+h);
+    // o:=(1.0/4.0)*((*a+c+e+g+*)b+d+f+h);
+    o:=matrix[row+round(step/2)][col+round(step/2)];
 (*ab..ha are external sides of the square   *)
 	    ab:=sqrt((a-b)*(a-b)+v1*v1);
       bc:=sqrt((b-c)*(b-c)+(side-v1)*(side-v1));
@@ -704,23 +707,23 @@ if Form1.RadioButton4.Checked then //open a section for Max-diff method;
       ghs:=sqrt((g-h)*(g-h)+(side-v4)*(side-v4));
       ha:=sqrt((h-a)*(h-a)+v4*v4);
 (* oa..oh are internal sides of triangles   *)
-	    hb:=sqrt((h-b)*(h-b)+ha*ha+ab*ab);
-      bd:=sqrt((b-d)*(b-d)+bc*bc+cd*cd);
-      df:=sqrt((d-f)*(d-f)+de*de+ef*ef);
-      fh:=sqrt((f-h)*(f-h)+fg*fg+ghs*ghs);
+	    hb:=sqrt((h-b)*(h-b)+v4*v4+v1*v1);
+      bd:=sqrt((b-d)*(b-d)+(side-v1)*(side-v1)+v2*v2);
+      df:=sqrt((d-f)*(d-f)+(side-v2)*(side-v2)+(side-v3)*(side-v3));
+      fh:=sqrt((f-h)*(f-h)+v3*v3+(side-v4)*(side-v4));
 
-      ob:=sqrt((o-b)*(o-b)+Power(v1-1-round(side/2),2)
+      ob:=sqrt((o-b)*(o-b)+Power(v1-0.5*side,2)+
           +Power(round(side/2),2));
-      od:=sqrt((o-d)*(o-d)+Power(v2-1-round(side/2),2)
+      od:=sqrt((o-d)*(o-d)+Power(v2-0.5*side,2)+
           +Power(round(side/2),2));
-      ofs:=sqrt((o-f)*(o-f)+Power(v3-1-round(side/2),2)
+      ofs:=sqrt((o-f)*(o-f)+Power(v3-0.5*side,2)+
           +Power(round(side/2),2));
-      oh:=sqrt((o-h)*(o-h)+Power(v4-1-round(side/2),2)
+      oh:=sqrt((o-h)*(o-h)+Power(v4-0.5*side,2)+
           +Power(round(side/2),2));
 (* Compute values from Heron's formula       *)
 SetLength(tp,8);  //semiperimeter;
 	    tp[0]:=0.5*(ha+ab+hb);
-      tp[1]:=0.5*(hb+bd+oh);
+      tp[1]:=0.5*(hb+ob+oh);
       tp[2]:=0.5*(bd+ob+od);
       tp[3]:=0.5*(bd+bc+cd);
       tp[4]:=0.5*(od+df+ofs);
@@ -731,7 +734,89 @@ SetLength(tp,8);  //semiperimeter;
 (* Obtain areas from Heron's formula       *)
 ta:=0;
      ta:=sqrt(abs(tp[0]*(tp[0]-ha)*(tp[0]-ab)*(tp[0]-hb)));
-      ta:=ta+sqrt(abs(tp[1]*(tp[1]-hb)*(tp[1]-bd)*(tp[1]-oh)));
+      ta:=ta+sqrt(abs(tp[1]*(tp[1]-hb)*(tp[1]-ob)*(tp[1]-oh)));
+       ta:=ta+sqrt(abs(tp[2]*(tp[2]-bd)*(tp[2]-ob)*(tp[2]-od)));
+        ta:=ta+sqrt(abs(tp[3]*(tp[3]-bd)*(tp[3]-bc)*(tp[3]-cd)));
+         ta:=ta+sqrt(abs(tp[4]*(tp[4]-od)*(tp[4]-df)*(tp[4]-ofs)));
+          ta:=ta+sqrt(abs(tp[5]*(tp[5]-df)*(tp[5]-de)*(tp[5]-ef)));
+           ta:=ta+sqrt(abs(tp[6]*(tp[6]-ofs)*(tp[6]-fh)*(tp[6]-oh)));
+            ta:=ta+sqrt(abs(tp[7]*(tp[7]-fh)*(tp[7]-fg)*(tp[7]-ghs)));
+(* Add to total surface area                 *)
+	  surface_area:= surface_area+ta;
+                            eNd;
+
+
+if Form1.RadioButton5.Checked then //open a section for Mean-diff method;
+                            beGin
+ (*declare four corner edge points*)
+      a:=matrix[row][col];
+      c:=matrix[row][col+step];
+	    e:=matrix[row+step][col+step];
+      g:=matrix[row+step][col];
+      (* o is the center point of four pixel values*)
+
+    o:=matrix[row+round(step/2)][col+round(step/2)];
+ (*declare four middle edge points*)
+
+  v1:=0; v2:=0;v3:=0;v4:=0;
+  for j :=0 to step do
+     begin
+      if Abs(matrix[row][col+v1]-o)>abs(matrix[row][col+j] -o) then
+      v1:=j;
+    if abs(matrix[row+v2][col+step]-o)>abs(matrix[row+j][col+step]-o) then
+      v2:=j;
+   if abs(matrix[row+step][col+v3]-o)>abs(matrix[row+step][col+j]-o) then
+      v3:=j;
+  if abs(matrix[row+v4][col]-o)>abs(matrix[row+j][col]-o) then
+      v4:=j;
+       end;
+
+ //Form1.Memo1.Lines.Add(InttoStr(step)+' :: '+InttoStr(v1)+' ;'+InttoStr(v2)+' ;'+
+ //InttoStr(v3)+' ;'+InttoStr(v4)+' \\' );
+
+      b:=matrix[row][col+v1];
+      d:=matrix[row+v2][col+step];
+	    f:=matrix[row+step][col+v3];
+      h:=matrix[row+v4][col];
+
+(*ab..ha are external sides of the square   *)
+	    ab:=sqrt((a-b)*(a-b)+v1*v1);
+      bc:=sqrt((b-c)*(b-c)+(side-v1)*(side-v1));
+      cd:=sqrt((c-d)*(c-d)+v2*v2);
+      de:=sqrt((d-e)*(d-e)+(side-v2)*(side-v2));
+      ef:=sqrt((e-f)*(e-f)+(side-v3)*(side-v3));
+      fg:=sqrt((f-g)*(f-g)+v3*v3);
+      ghs:=sqrt((g-h)*(g-h)+(side-v4)*(side-v4));
+      ha:=sqrt((h-a)*(h-a)+v4*v4);
+(* oa..oh are internal sides of triangles   *)
+	    hb:=sqrt((h-b)*(h-b)+v4*v4+v1*v1);
+      bd:=sqrt((b-d)*(b-d)+(side-v1)*(side-v1)+v2*v2);
+      df:=sqrt((d-f)*(d-f)+(side-v2)*(side-v2)+(side-v3)*(side-v3));
+      fh:=sqrt((f-h)*(f-h)+v3*v3+(side-v4)*(side-v4));
+
+      ob:=sqrt((o-b)*(o-b)+Power(v1-0.5*side,2)+
+          +Power(round(side/2),2));
+      od:=sqrt((o-d)*(o-d)+Power(v2-0.5*side,2)+
+          +Power(round(side/2),2));
+      ofs:=sqrt((o-f)*(o-f)+Power(v3-0.5*side,2)+
+          +Power(round(side/2),2));
+      oh:=sqrt((o-h)*(o-h)+Power(v4-0.5*side,2)+
+          +Power(round(side/2),2));
+(* Compute values from Heron's formula       *)
+SetLength(tp,8);  //semiperimeter;
+	    tp[0]:=0.5*(ha+ab+hb);
+      tp[1]:=0.5*(hb+ob+oh);
+      tp[2]:=0.5*(bd+ob+od);
+      tp[3]:=0.5*(bd+bc+cd);
+      tp[4]:=0.5*(od+df+ofs);
+      tp[5]:=0.5*(df+de+ef);
+      tp[6]:=0.5*(ofs+fh+oh);
+      tp[7]:=0.5*(fh+fg+ghs);
+
+(* Obtain areas from Heron's formula       *)
+ta:=0;
+     ta:=sqrt(abs(tp[0]*(tp[0]-ha)*(tp[0]-ab)*(tp[0]-hb)));
+      ta:=ta+sqrt(abs(tp[1]*(tp[1]-hb)*(tp[1]-ob)*(tp[1]-oh)));
        ta:=ta+sqrt(abs(tp[2]*(tp[2]-bd)*(tp[2]-ob)*(tp[2]-od)));
         ta:=ta+sqrt(abs(tp[3]*(tp[3]-bd)*(tp[3]-bc)*(tp[3]-cd)));
          ta:=ta+sqrt(abs(tp[4]*(tp[4]-od)*(tp[4]-df)*(tp[4]-ofs)));
@@ -753,6 +838,7 @@ ta:=0;
        if Form1.CheckBox2.Checked then
 	     resolution[timex]:=step*step else
       resolution[timex]:=step;
+
        step:=step*2;
        end;
    breakpoint1:=true;
@@ -797,21 +883,21 @@ Begin
   beta:=r*sqrt(sumarea)/sqrt(sumres);
   dimension:=2.0-beta;
 
-//  Form1.Memo1.Lines.Add('');
-//   Form1.Memo1.Lines.Add(' >> ** Fractional Dimension= '+FloattoStr(dimension));
-//   Form1.Memo1.Lines.Add(' >>  r-squared= '+FloattoStr(r*r));
-//   Form1.Memo1.Lines.Add(' >> ** with '+FloattoStr(steps)+' observations');
-//    Form1.Memo1.Lines.Add('');
-//   Form1.Memo1.Lines.Add(' ln(resolution)');
-//  for n:=1 to steps do begin
-//  Form1.Memo1.Lines.Add('      #'+Inttostr(n)+'  '+FloattoStr(resolution[n]));
- //                        end;
-//    Form1.Memo1.Lines.Add('');
-//  Form1.Memo1.Lines.Add('ln(area)');
-//   for n:=1 to steps do begin
-//    Form1.Memo1.Lines.Add('     #'+Inttostr(n)+'  '+FloattoStr( area[n]));
- //                         end;
-
+(*  Form1.Memo1.Lines.Add('');
+   Form1.Memo1.Lines.Add(' >> ** Fractional Dimension= '+FloattoStr(dimension));
+   Form1.Memo1.Lines.Add(' >>  r-squared= '+FloattoStr(r*r));
+   Form1.Memo1.Lines.Add(' >> ** with '+FloattoStr(steps)+' observations');
+    Form1.Memo1.Lines.Add('');
+   Form1.Memo1.Lines.Add(' ln(resolution)');
+ for n:=1 to steps do begin
+  Form1.Memo1.Lines.Add('      #'+Inttostr(n)+'  '+FloattoStr(resolution[n]));
+                        end;
+    Form1.Memo1.Lines.Add('');
+  Form1.Memo1.Lines.Add('ln(area)');
+   for n:=1 to steps do begin
+    Form1.Memo1.Lines.Add('     #'+Inttostr(n)+'  '+FloattoStr( area[n]));
+                         end;
+*)
    breakpoint1:=true;
 	End;
 
@@ -919,7 +1005,8 @@ if Form1.Swich1.Checked then begin
 // +Inttostr(end_col));
 if Form1.RadioButton1.Checked or Form1.RadioButton2.Checked then
        fractal();
-if Form1.RadioButton3.Checked or Form1.RadioButton4.Checked then
+if Form1.RadioButton3.Checked or Form1.RadioButton4.Checked or
+   Form1.RadioButton5.Checked then
 fractalEPx();
 
       linefit();
@@ -982,7 +1069,7 @@ procedure TForm1.SpeedButton1Click(Sender: TObject);
 begin
  Form1.Memo1.Lines.Add('');
  Form1.Memo1.Lines.Add('(*========================================*)');
- 
+
    calculateFracDim();
 end;
 
@@ -1040,7 +1127,7 @@ readdem();
 if breakpoint1 then begin
 center();
 fractal();
-linefit(); 
+linefit();
 Form1.Memo1.Lines.Add('fract dim='+FloattoStrf(dimension, ffFixed,5,3)+' steps='+Inttostr(steps));
 end;
 end;

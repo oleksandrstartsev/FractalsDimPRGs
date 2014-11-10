@@ -307,7 +307,7 @@ object Form1: TForm1
       Top = 175
       Width = 136
       Height = 17
-      Caption = 'arithmetic-step method'
+      Caption = 'step-arithmetic method'
       TabOrder = 17
       OnClick = RadioButton6Click
     end

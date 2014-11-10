@@ -38,6 +38,10 @@ type
     RadioButton3: TRadioButton;
     CheckBox2: TCheckBox;
     RadioButton4: TRadioButton;
+    RadioButton5: TRadioButton;
+    RadioButton6: TRadioButton;
+    Panel2: TPanel;
+    LabeledEdit8: TLabeledEdit;
     procedure ClearButtonClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure FormResize(Sender: TObject);
@@ -47,6 +51,10 @@ type
     procedure SpeedButton5Click(Sender: TObject);
     procedure SpeedButton6Click(Sender: TObject);
     procedure SpeedButton7Click(Sender: TObject);
+    procedure RadioButton6Click(Sender: TObject);
+    procedure RadioButton1Click(Sender: TObject);
+    procedure RadioButton2Click(Sender: TObject);
+    procedure RadioButton3Click(Sender: TObject);
 
   private
     { Private declarations }
@@ -76,7 +84,7 @@ rowmax, colmax, steps, begin_row, end_row,begin_col, end_col, timex:integer;
   myFile1,mysaveFile1 : TextFile;
   Sarray1: array of string;
   Iarray1: array of array of double;  //end file variables;
-
+  window_size:double;
 implementation
 
 {$R *.dfm}
@@ -544,29 +552,31 @@ procedure fractalEPx();
 Var	 row, col, step,gh,j,
 v1,v2,v3,v4: integer;
     side, diag:double;
-
      a,b,c,d,e,w,x,y,z,o,p,q,r,sa,sb,sc,sd,
            aa,ab,ac,ad, surface_area,
      g,f,h,bc,cd,de,ef,fg,ghs,ha,
      oa,ob,oc,od,oe,ofs,og,oh,
-     ta,hb,bd,df,fh :double;
-     tp: array of double;
+     ta,hb,bd,df,fh,
+     mean1,mean2,mean3,mean4,
+     windowsize :double;
+     tp,dividers: array of double;
  Begin step:= 1;     gh:=0;
        SetLength(area,100);
        SetLength(resolution,100);
+
+
 (*Repeat for area sequence 2^0, 2^2, 2^3, etc. *)
 
    for timex:=1 to steps do begin
    surface_area:=0.0;
-
      (*Set length of sides of triangles *)
    side:=step;
    diag:=step*sqrt(2.0)/2.0;
   (*Process whole array at this size *)
-    row:=begin_row-1;
+      row:=begin_row-1;
    while (row<end_row-1) do begin
 
-   col:=begin_col-1;
+      col:=begin_col-1;
 
    while(col<end_col-1) do begin
    gh:=0;
@@ -600,8 +610,10 @@ v1,v2,v3,v4: integer;
       ac:=sqrt(abs(sc*(sc-y)*(sc-q)*(sc-r)));
       ad:=sqrt(abs(sd*(sd-z)*(sd-o)*(sd-r)));
 (* Add to total surface area                 *)
-	  surface_area:= surface_area+aa+ab+ac+ad;
+	    surface_area:= surface_area+aa+ab+ac+ad;
                             eNd else  begin
+   (*try different Triangle Prism Methods by @Sun, 2004: max-difference method,
+   mean-difference method, eight-pixel method*)
 
    if Form1.RadioButton3.Checked then //open a section for 8-px method;
 
@@ -617,8 +629,8 @@ v1,v2,v3,v4: integer;
       d:=matrix[row+round(step/2)][col+step];
 	    f:=matrix[row+step][col+round(step/2)];
       h:=matrix[row+round(step/2)][col];
-(* o is the center point of four pixel values*)
-      o:=(1.0/8.0)*(a+c+e+g+b+d+f+h);
+(* o is the center point of our local window (step+1).x.(step+1) *)
+      o:=matrix[row+round(step/2)][col+round(step/2)];
 (*ab..ha are external sides of the square   *)
 	    ab:=sqrt((a-b)*(a-b)+0.25*side*side);
       bc:=sqrt((b-c)*(b-c)+0.25*side*side);
@@ -672,28 +684,115 @@ if Form1.RadioButton4.Checked then //open a section for Max-diff method;
       g:=matrix[row+step][col];
  (*declare four middle edge points*)
 
-  v1:=0; v2:=0;v3:=0;v4:=0;
+      v1:=0; v2:=0;v3:=0;v4:=0;
   for j :=0 to step do
      begin
       if matrix[row][col+v1]<matrix[row][col+j] then
       v1:=j;
-    if matrix[row+v2][col+step]<matrix[row+j][col+step] then
+      if matrix[row+v2][col+step]<matrix[row+j][col+step] then
       v2:=j;
-   if matrix[row+step][col+v3]<matrix[row+step][col+j] then
+      if matrix[row+step][col+v3]<matrix[row+step][col+j] then
       v3:=j;
-  if matrix[row+v4][col]<matrix[row+j][col] then
+      if matrix[row+v4][col]<matrix[row+j][col] then
       v4:=j;
        end;
-
- //Form1.Memo1.Lines.Add(InttoStr(step)+' :: '+InttoStr(v1)+' ;'+InttoStr(v2)+' ;'+
- //InttoStr(v3)+' ;'+InttoStr(v4)+' \\' );
 
       b:=matrix[row][col+v1];
       d:=matrix[row+v2][col+step];
 	    f:=matrix[row+step][col+v3];
       h:=matrix[row+v4][col];
 (* o is the center point of four pixel values*)
-      o:=(1.0/4.0)*((*a+c+e+g+*)b+d+f+h);
+      o:=matrix[row+round(step/2)][col+round(step/2)];
+(*ab..ha are external sides of the square   *)
+	    ab:=sqrt((a-b)*(a-b)+v1*v1);
+      bc:=sqrt((b-c)*(b-c)+(side-v1)*(side-v1));
+      cd:=sqrt((c-d)*(c-d)+v2*v2);
+      de:=sqrt((d-e)*(d-e)+(side-v2)*(side-v2));
+      ef:=sqrt((e-f)*(e-f)+(side-v3)*(side-v3));
+      fg:=sqrt((f-g)*(f-g)+v3*v3);
+      ghs:=sqrt((g-h)*(g-h)+(side-v4)*(side-v4));
+      ha:=sqrt((h-a)*(h-a)+v4*v4);
+(* oa..oh are internal sides of triangles   *)
+	    hb:=sqrt((h-b)*(h-b)+v4*v4+v1*v1);
+      bd:=sqrt((b-d)*(b-d)+(side-v1)*(side-v1)+v2*v2);
+      df:=sqrt((d-f)*(d-f)+(side-v2)*(side-v2)+(side-v3)*(side-v3));
+      fh:=sqrt((f-h)*(f-h)+v3*v3+(side-v4)*(side-v4));
+
+      ob:=sqrt((o-b)*(o-b)+Power(v1-0.5*side,2)+
+          +Power(round(side/2),2));
+      od:=sqrt((o-d)*(o-d)+Power(v2-0.5*side,2)+
+          +Power(round(side/2),2));
+      ofs:=sqrt((o-f)*(o-f)+Power(v3-0.5*side,2)+
+          +Power(round(side/2),2));
+      oh:=sqrt((o-h)*(o-h)+Power(v4-0.5*side,2)+
+          +Power(round(side/2),2));
+(* Compute values from Heron's formula       *)
+SetLength(tp,8);  //semiperimeter;
+	    tp[0]:=0.5*(ha+ab+hb);
+      tp[1]:=0.5*(hb+ob+oh);
+      tp[2]:=0.5*(bd+ob+od);
+      tp[3]:=0.5*(bd+bc+cd);
+      tp[4]:=0.5*(od+df+ofs);
+      tp[5]:=0.5*(df+de+ef);
+      tp[6]:=0.5*(ofs+fh+oh);
+      tp[7]:=0.5*(fh+fg+ghs);
+
+(* Obtain areas from Heron's formula       *)
+ta:=0;
+     ta:=sqrt(abs(tp[0]*(tp[0]-ha)*(tp[0]-ab)*(tp[0]-hb)));
+      ta:=ta+sqrt(abs(tp[1]*(tp[1]-hb)*(tp[1]-ob)*(tp[1]-oh)));
+       ta:=ta+sqrt(abs(tp[2]*(tp[2]-bd)*(tp[2]-ob)*(tp[2]-od)));
+        ta:=ta+sqrt(abs(tp[3]*(tp[3]-bd)*(tp[3]-bc)*(tp[3]-cd)));
+         ta:=ta+sqrt(abs(tp[4]*(tp[4]-od)*(tp[4]-df)*(tp[4]-ofs)));
+          ta:=ta+sqrt(abs(tp[5]*(tp[5]-df)*(tp[5]-de)*(tp[5]-ef)));
+           ta:=ta+sqrt(abs(tp[6]*(tp[6]-ofs)*(tp[6]-fh)*(tp[6]-oh)));
+            ta:=ta+sqrt(abs(tp[7]*(tp[7]-fh)*(tp[7]-fg)*(tp[7]-ghs)));
+(* Add to total surface area                 *)
+	  surface_area:= surface_area+ta;
+                            eNd;
+
+
+if Form1.RadioButton5.Checked then //open a section for Mean-diff method;
+                            beGin
+ (*declare four corner edge points*)
+      a:=matrix[row][col];
+      c:=matrix[row][col+step];
+	    e:=matrix[row+step][col+step];
+      g:=matrix[row+step][col];
+      (* o is the center point of four pixel values*)
+
+    o:=matrix[row+round(step/2)][col+round(step/2)];
+ (*declare four middle edge points*)
+         mean1:=0;mean2:=0; mean3:=0; mean4:=0;
+         for j := 0 to step do
+           begin
+             mean1:=mean1+abs(matrix[row][col+j] -o);
+             mean2:=mean2+abs(matrix[row+j][col+step]-o);
+             mean3:=mean3+abs(matrix[row+step][col+j]-o);
+             mean4:=mean4+abs(matrix[row+j][col]-o);
+           end;
+           mean1:=mean1/(step+1);
+           mean2:=mean2/(step+1);
+           mean3:=mean3/(step+1);
+           mean4:=mean4/(step+1);
+  v1:=0; v2:=0;v3:=0;v4:=0;
+  for j :=0 to step do
+     begin
+      if abs(Abs(matrix[row][col+v1]-o)-mean1)>abs(abs(matrix[row][col+j] -o)-mean1) then
+      v1:=j;
+      if abs(abs(matrix[row+v2][col+step]-o)-mean2)>abs(abs(matrix[row+j][col+step]-o)-mean2) then
+      v2:=j;
+      if abs(abs(matrix[row+step][col+v3]-o)-mean3)>abs(abs(matrix[row+step][col+j]-o)-mean3) then
+      v3:=j;
+      if abs(abs(matrix[row+v4][col]-o)-mean4)>abs(abs(matrix[row+j][col]-o)-mean4) then
+      v4:=j;
+       end;
+
+      b:=matrix[row][col+v1];
+      d:=matrix[row+v2][col+step];
+	    f:=matrix[row+step][col+v3];
+      h:=matrix[row+v4][col];
+
 (*ab..ha are external sides of the square   *)
 	    ab:=sqrt((a-b)*(a-b)+v1*v1);
       bc:=sqrt((b-c)*(b-c)+(side-v1)*(side-v1));
@@ -752,10 +851,119 @@ ta:=0;
     	 area[timex]:= surface_area;
        if Form1.CheckBox2.Checked then
 	     resolution[timex]:=step*step else
-      resolution[timex]:=step;
-
+       resolution[timex]:=step;
        step:=step*2;
        end;
+   breakpoint1:=true;
+ENd;
+
+(*==================================================*)
+(*             arithmetic-step method               *)
+(*==================================================*)
+procedure fractalASM();   //ASM
+Var	 row, col, step,gh: integer;
+    side, diag:double;
+
+     a,b,c,d,e,w,x,y,z,o,p,q,r,sa,sb,sc,sd,
+           aa,ab,ac,ad, surface_area :double;
+ Begin step:= 1;     gh:=0;
+       SetLength(area,1000);
+       SetLength(resolution,1000);
+
+
+   for timex:=1 to steps do begin
+   surface_area:=0.0;
+     (*Set length of sides of triangles *)
+   side:=step;
+   diag:=step*sqrt(2.0)/2.0;
+  (*Process whole array at this size *)
+    row:=begin_row-1;
+   while (row<end_row-1) do begin
+
+   col:=begin_col-1;
+
+   while(col<end_col-1) do begin
+   gh:=0;
+
+  (*
+    //  Form1.Memo1.Lines.Add(InttoStr(row)+','+InttoStr(col)+' ; '+Inttostr(step));
+   if (step=2)and((row-begin_row>0)or(col-begin_col>0)) then  begin
+    //   Form1.Memo1.Lines.Add(InttoStr(row)+'>1,'+InttoStr(col)+'>1 ; '
+    //   +Inttostr(step));
+     if row-begin_row>0 then
+         begin  // Form1.Memo1.Lines.Add(InttoStr(row)+'row');
+         row:=row-1;//Form1.Memo1.Lines.Add(InttoStr(row)+'row--');
+         gh:=1;
+         end;
+      if col-begin_col>0 then
+         begin// Form1.Memo1.Lines.Add(InttoStr(col)+'col ');
+         col:=col-1;// Form1.Memo1.Lines.Add(InttoStr(col)+'col--');
+         gh:=gh+3;
+          end;
+  end;
+        *)
+
+//     (*if (step=2) then *) if row>11 then
+// Form1.Memo1.Lines.Add(InttoStr(row)+'.,'+InttoStr(col)+'. ; st:: '+
+// Inttostr(step)+ ' ,gh='+Inttostr(gh) );
+
+      a:=matrix[row][col];
+      b:=matrix[row][col+step];
+	    c:=matrix[row+step][col+step];
+      d:=matrix[row+step][col];
+
+(* e is the center point of four pixel values*)
+      e:=0.25*(a+b+c+d);
+(*w,x,y,z are external sides of the square   *)
+	    w:=sqrt((a-b)*(a-b)+side*side);
+      x:=sqrt((b-c)*(b-c)+side*side);
+      y:=sqrt((c-d)*(c-d)+side*side);
+      z:=sqrt((a-d)*(a-d)+side*side);
+(* o,p,q,r are internal sides of triangles   *)
+	    o:=sqrt((a-e)*(a-e)+diag*diag);
+      p:=sqrt((b-e)*(b-e)+diag*diag);
+      q:=sqrt((c-e)*(c-e)+diag*diag);
+      r:=sqrt((d-e)*(d-e)+diag*diag);
+(* Compute values from Heron's formula       *)
+	    sa:=0.5*(w+p+o);
+      sb:=0.5*(x+p+q);
+      sc:=0.5*(y+q+r);
+      sd:=0.5*(z+o+r);
+(* Solve areas from Heron's formula       *)
+	    aa:=sqrt(abs(sa*(sa-w)*(sa-p)*(sa-o)));
+      ab:=sqrt(abs(sb*(sb-x)*(sb-p)*(sb-q)));
+      ac:=sqrt(abs(sc*(sc-y)*(sc-q)*(sc-r)));
+      ad:=sqrt(abs(sd*(sd-z)*(sd-o)*(sd-r)));
+(* Add to total surface area                 *)
+	  surface_area:= surface_area+aa+ab+ac+ad;
+
+
+
+
+    (*     if gh<>0 then
+         begin
+           if gh=1 then begin row:=row+1;gh:=0; end;
+           if gh=3 then begin col:=col+1; gh:=0; end;
+           if gh=4 then begin col:=col+1; row:=row+1; gh:=0; end;
+   //      Form1.Memo1.Lines.Add('mod renew::'+InttoStr(row)+','+Inttostr(col)+' gh='+InttoStr(gh));
+         end;       *)
+          col:=col+step;
+      end;
+
+       row:=row+step;
+
+
+
+   end;
+(*Save area and resolution, increment step size*)
+	 area[timex]:= surface_area;
+   if Form1.CheckBox2.Checked then
+	 resolution[timex]:=step*step;  //from Classic Clarke method 1985y; (underestimating);
+    if not Form1.CheckBox2.Checked  then
+	 resolution[timex]:=step; //like Qiu, Lam et al. method; modernized to define a higher FracDim;
+
+     step:=step+1;
+     end;
    breakpoint1:=true;
 ENd;
 
@@ -791,13 +999,15 @@ Begin
     for n:=1 to steps do begin
     cross:= cross+((resolution[n]-resavg)*(area[n]-areaavg));
     sumres:=sumres+((resolution[n]-resavg)*(resolution[n]-resavg));
-	sumarea:=sumarea+((area[n]-areaavg)*(area[n]-areaavg));
+   	sumarea:=sumarea+((area[n]-areaavg)*(area[n]-areaavg));
      end;
 (*Compute correlation coefficient and fractal dimension *)
   r:=cross/sqrt(sumres*sumarea);
   beta:=r*sqrt(sumarea)/sqrt(sumres);
   dimension:=2.0-beta;
+   breakpoint1:=true;
 
+  (*testing block*)
 (*  Form1.Memo1.Lines.Add('');
    Form1.Memo1.Lines.Add(' >> ** Fractional Dimension= '+FloattoStr(dimension));
    Form1.Memo1.Lines.Add(' >>  r-squared= '+FloattoStr(r*r));
@@ -813,7 +1023,6 @@ Begin
     Form1.Memo1.Lines.Add('     #'+Inttostr(n)+'  '+FloattoStr( area[n]));
                          end;
 *)
-   breakpoint1:=true;
 	End;
 
 procedure TForm1.ClearButtonClick(Sender: TObject);
@@ -824,13 +1033,13 @@ end;
 procedure TForm1.FormResize(Sender: TObject);
 begin
  Form1.Memo1.Width:=round(Form1.Width*0.7);
-Form1.Memo1.Height:=round(Form1.Height*0.7);
- Form1.Memo1.Left:=round(Form1.Height*0.26);
- Form1.SpeedButton1.Width:=round(Form1.Height*0.2);
- Form1.SpeedButton2.Width:=round(Form1.Height*0.2);
- Form1.SpeedButton5.Width:=round(Form1.Height*0.2);
- Form1.ClearButton.Width:=round(Form1.Height*0.06);
-  Form1.Panel1.Width:=round(Form1.Height*0.2);
+Form1.Memo1.Height:=round(Form1.Height*0.85);
+ Form1.Memo1.Left:=round(Form1.Height*0.31);
+ Form1.SpeedButton1.Width:=round(Form1.Height*0.25);
+ Form1.SpeedButton2.Width:=round(Form1.Height*0.25);
+ Form1.SpeedButton5.Width:=round(Form1.Height*0.25);
+ Form1.ClearButton.Width:=round(Form1.Height*0.1);
+  Form1.Panel1.Width:=round(Form1.Height*0.27);
  Form1.Memo1.Font.Size:=round(15*Form1.Width/Screen.Width);
   Form1.LabeledEdit1.Width:=round(Form1.Height*0.08);
   Form1.LabeledEdit2.Width:=round(Form1.Height*0.08);
@@ -838,6 +1047,26 @@ Form1.Memo1.Height:=round(Form1.Height*0.7);
 end;
 
 
+
+procedure TForm1.RadioButton1Click(Sender: TObject);
+begin
+fORM1.Panel2.Visible:=false;
+end;
+
+procedure TForm1.RadioButton2Click(Sender: TObject);
+begin
+fORM1.Panel2.Visible:=false;
+end;
+
+procedure TForm1.RadioButton3Click(Sender: TObject);
+begin
+fORM1.Panel2.Visible:=false;
+end;
+
+procedure TForm1.RadioButton6Click(Sender: TObject);
+begin
+fORM1.Panel2.Visible:=true;
+end;
 
 procedure calculateFracDim();
 VAr i,j: integer;
@@ -858,10 +1087,13 @@ linefit(); end;   *)
 (*===========================================*)
 (*           test for different matrx szes   *)
 (*+++++++++++++++++++++++++++++++++++++++++++*)
+if not Form1.RadioButton6.Checked  then  begin
+
+
  breakpoint1:=false;
  QueryPerformanceFrequency(frequencyX);
-  QueryPerformanceCounter(startTimeX);
-readdem();
+ QueryPerformanceCounter(startTimeX);
+ readdem();
 if breakpoint1 then begin
 // Form1.Memo1.Lines.Add('bp#1:: passed');
 //center();
@@ -872,6 +1104,7 @@ if Form1.Swich1.Checked then begin
   begin_col:=StrtoInt(Form1.LabeledEdit5.Text);
   end_row:=StrToInt(Form1.LabeledEdit6.Text);*)
   steps:=StrToInt(Form1.LabeledEdit7.Text);
+
  // Form1.Memo1.Lines.Add('steps:: '+InttoStr(steps));
   (*Define steps:: 1,2,4 -> 1,4,8 frac kernel size*)
   boxside:=1;
@@ -902,7 +1135,7 @@ if Form1.Swich1.Checked then begin
       for I :=0 to Length(fracMTRX)-1 do begin
         begin_row:=I+1;
         end_row:= begin_row+boxside;  (*I+boxside*)
-           if end_row>NUMROW+1 then begin
+           if end_row>NUMROW then begin
              Form1.Memo1.Lines.Add('bp#2:: end_row>NUMROW');
              exit;
            end;
@@ -911,7 +1144,7 @@ if Form1.Swich1.Checked then begin
     BEGIN
         begin_col:=j+1;
         end_col:= begin_col+boxside; (*j+boxside*)
-           if end_col>NUMCOL+1 then begin
+           if end_col>NUMCOL then begin
              Form1.Memo1.Lines.Add('bp#3:: end_col>NUMCOL');
              exit;
            end;
@@ -920,7 +1153,8 @@ if Form1.Swich1.Checked then begin
 // +Inttostr(end_col));
 if Form1.RadioButton1.Checked or Form1.RadioButton2.Checked then
        fractal();
-if Form1.RadioButton3.Checked or Form1.RadioButton4.Checked then
+if Form1.RadioButton3.Checked or Form1.RadioButton4.Checked or
+   Form1.RadioButton5.Checked or Form1.RadioButton6.Checked then
 fractalEPx();
 
       linefit();
@@ -942,11 +1176,91 @@ Form1.Memo1.Lines.Add('You can save FRACTAL MAP into file. Press button "SAVE FM
 end; (*SWICH 1 end*)
 
 end;
-(*
-for I := 0 to Length(matrix)-1 do
-for j := 0 to length(matrix[i])-1 do
-  Form1.Memo1.Lines.Add(InttoStr(I)+', '+InttoStr(j)+' ='+floattoStr(matrix[i,j]));
-*)
+
+end else
+begiN
+
+ breakpoint1:=false;
+ QueryPerformanceFrequency(frequencyX);
+ QueryPerformanceCounter(startTimeX);
+ readdem();
+if breakpoint1 then begin
+// Form1.Memo1.Lines.Add('bp#1:: passed');
+//center();
+if Form1.Swich1.Checked then begin
+
+
+   if trystrtoint(Form1.LabeledEdit8.Text, steps) then
+   steps:=strtoint(Form1.LabeledEdit8.Text) else begin
+   Form1.Memo1.Lines.Add('Failed:: window size must be integer');
+   exit;
+   end;
+
+ // Form1.Memo1.Lines.Add('steps:: '+InttoStr(steps));
+  (*Define steps:: 1,2,4 -> 1,4,8 frac kernel size*)
+  boxside:=steps;
+  window_size:=steps;
+      Form1.Memo1.Lines.Add('boxside:: 1..+1.. '+InttoStr(boxside));
+
+     if (NUMROW<boxside) and  (NUMCOL<boxside) then
+     begin
+     Form1.Memo1.Lines.Add('Not enough elements. Procedure [frac dim] EXIT is activated');
+     exit;
+     end;
+
+  dimrowfracMTRX:=(NUMROW-boxside);
+  dimcolfracMTRX:=(NUMCOL-boxside);  (*Define size of frac map matrix:: fracMTRX*)
+     SetLength(fracMTRX,dimrowfracMTRX,dimcolfracMTRX);
+     Form1.Memo1.Lines.Add('  fracMTRX allocated '+Inttostr(dimrowfracMTRX)+ ' , '+InttoStr( dimcolfracMTRX));
+     (**)
+       for I :=0 to Length(fracMTRX)-1 do
+      for j :=0 to Length(fracMTRX[I])-1 do
+      fracMTRX[I,j]:=0;
+
+
+       Form1.Memo1.Lines.Add('');
+       Form1.Memo1.Lines.Add('  ** MTRX frac map is calculating...');
+
+
+      for I :=0 to Length(fracMTRX)-1 do begin
+        begin_row:=I+1;
+        end_row:= begin_row+boxside-1;  (*I+boxside*)
+           if end_row>NUMROW then begin
+             Form1.Memo1.Lines.Add('bp#2:: end_row>NUMROW');
+             exit;
+           end;
+
+      for j :=0 to Length(fracMTRX[I])-1 do
+    BEGIN
+        begin_col:=j+1;
+        end_col:= begin_col+boxside-1; (*j+boxside*)
+           if end_col>NUMCOL then begin
+             Form1.Memo1.Lines.Add('bp#3:: end_col>NUMCOL');
+             exit;
+           end;
+
+      fractalASM();
+      linefit();
+       SetLength(area,0); SetLength(resolution,0);
+        fracMTRX[I][j]:=dimension;
+       // Form1.Memo1.Lines.Add(InttoStr(i)+','+Inttostr(j)+
+       // '= '+FloattoStr(fracMTRX[I][j]));
+     // Form1.Memo1.Lines.Add('  ');
+    END;
+                                        end;
+      (*time perfomance*)
+ QueryPerformanceCounter(endTimeX);
+  deltaX := (endTimeX - startTimeX) / frequencyX;
+Form1.Memo1.Lines.Add(FloatToStr(deltaX*1000)+' ms');
+Form1.Memo1.Lines.Add('');
+Form1.Memo1.Lines.Add('Press button "Show FM" to see fractal dimension matrix');
+Form1.Memo1.Lines.Add('');
+Form1.Memo1.Lines.Add('You can save FRACTAL MAP into file. Press button "SAVE FM"');
+end; (*SWICH 1 end*)
+
+end;
+enD;
+
 
 end;
 

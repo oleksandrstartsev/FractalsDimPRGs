@@ -11,106 +11,114 @@ object Form1: TForm1
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  ShowHint = True
   OnResize = FormResize
   PixelsPerInch = 96
   TextHeight = 13
   object Panel1: TPanel
     Left = 8
-    Top = 40
-    Width = 145
-    Height = 401
+    Top = 8
+    Width = 153
+    Height = 466
     TabOrder = 0
     object SpeedButton1: TSpeedButton
-      Left = 0
-      Top = 16
+      Left = 5
+      Top = 8
       Width = 145
       Height = 22
-      Caption = 'CLARK FRAC A with sliding1'
+      Hint = 'Choose you method'
+      Caption = 'Calculate with sliding1'
       OnClick = SpeedButton1Click
     end
     object SpeedButton2: TSpeedButton
       Left = 0
-      Top = 158
+      Top = 258
       Width = 145
       Height = 22
+      Hint = 
+        'Import the IR-data .IS2 file and transform into  .txt with a spe' +
+        'cial structure format '
       Caption = 'Import and transform'
       OnClick = SpeedButton2Click
     end
     object ClearButton: TSpeedButton
-      Left = 64
-      Top = 359
-      Width = 41
+      Left = 88
+      Top = 423
+      Width = 50
       Height = 34
       Caption = 'Clear'
       OnClick = ClearButtonClick
     end
     object SpeedButton3: TSpeedButton
-      Left = 0
-      Top = 359
-      Width = 34
+      Left = 5
+      Top = 423
+      Width = 45
       Height = 34
-      Caption = '-'
+      Caption = 'Font -'
       OnClick = SpeedButton3Click
     end
     object SpeedButton4: TSpeedButton
-      Left = 30
-      Top = 359
-      Width = 36
+      Left = 43
+      Top = 423
+      Width = 48
       Height = 34
-      Caption = '+'
+      Caption = 'Font+'
       OnClick = SpeedButton4Click
     end
     object SpeedButton5: TSpeedButton
       Left = 0
-      Top = 130
+      Top = 230
       Width = 145
       Height = 22
-      Caption = 'Clark FRAC A as 1985v'
+      Hint = 'test Clarke'#39's "86 on a sample file: image .txt'
+      Caption = 'test Clarke'#39's as "85'
       OnClick = SpeedButton5Click
     end
     object SpeedButton6: TSpeedButton
-      Left = 0
-      Top = 44
+      Left = 13
+      Top = 36
       Width = 58
       Height = 22
+      Hint = 'save calculated fractal matrix into file'
       Caption = 'Save FM'
       OnClick = SpeedButton6Click
     end
     object SpeedButton7: TSpeedButton
-      Left = 56
-      Top = 44
+      Left = 77
+      Top = 36
       Width = 49
       Height = 22
+      Hint = 'show calculated fractal matrix on screen'
       Caption = 'Show FM'
       OnClick = SpeedButton7Click
     end
     object Label1: TLabel
-      Left = 24
-      Top = 243
+      Left = 13
+      Top = 342
       Width = 26
       Height = 13
       Caption = 'steps'
     end
     object Label2: TLabel
-      Left = 8
-      Top = 186
-      Width = 58
+      Left = 3
+      Top = 295
+      Width = 47
       Height = 13
       Caption = 'NUMROW'
     end
     object Label3: TLabel
-      Left = 13
-      Top = 205
-      Width = 53
-      Height = 29
+      Left = 2
+      Top = 314
+      Width = 48
+      Height = 22
       Caption = 'NUMCOL'
     end
     object CheckBox1: TCheckBox
-      Left = 24
-      Top = 271
-      Width = 97
+      Left = 13
+      Top = 363
+      Width = 108
       Height = 17
-      Caption = 'Show save data'
+      Caption = 'Show data saving'
       TabOrder = 0
     end
     object LabeledEdit3: TLabeledEdit
@@ -156,8 +164,8 @@ object Form1: TForm1
       Visible = False
     end
     object Swich1: TCheckBox
-      Left = 24
-      Top = 298
+      Left = 13
+      Top = 386
       Width = 97
       Height = 17
       Caption = 'Swich #1'
@@ -166,16 +174,16 @@ object Form1: TForm1
       TabOrder = 4
     end
     object ShowInput: TCheckBox
-      Left = 24
-      Top = 321
+      Left = 13
+      Top = 400
       Width = 97
       Height = 17
-      Caption = 'Show I'
+      Caption = 'Show Input'
       TabOrder = 5
     end
     object LabeledEdit7: TSpinEdit
-      Left = 56
-      Top = 240
+      Left = 45
+      Top = 342
       Width = 65
       Height = 22
       MaxValue = 21
@@ -199,7 +207,7 @@ object Form1: TForm1
     end
     object LabeledEdit1: TSpinEdit
       Left = 56
-      Top = 185
+      Top = 286
       Width = 65
       Height = 22
       MaxValue = 5000
@@ -209,13 +217,85 @@ object Form1: TForm1
     end
     object LabeledEdit2: TSpinEdit
       Left = 56
-      Top = 203
+      Top = 314
       Width = 65
       Height = 22
       MaxValue = 5000
       MinValue = 7
       TabOrder = 9
       Value = 17
+    end
+    object RadioGroup1: TRadioGroup
+      Left = 0
+      Top = 64
+      Width = 145
+      Height = 160
+      Caption = 'Clarke methods'
+      TabOrder = 10
+    end
+    object RadioButton1: TRadioButton
+      Left = 13
+      Top = 76
+      Width = 113
+      Height = 17
+      Hint = 'step-squared slope'
+      Caption = 'classic Clarke'#39's "86'
+      Checked = True
+      TabOrder = 11
+      TabStop = True
+    end
+    object RadioButton2: TRadioButton
+      Left = 13
+      Top = 91
+      Width = 113
+      Height = 17
+      Hint = 'not step-squared slope'
+      Caption = 'Qiu Lam modification'
+      TabOrder = 12
+    end
+    object RadioButton3: TRadioButton
+      Left = 3
+      Top = 114
+      Width = 103
+      Height = 32
+      Hint = 
+        '8-px method by Sun, 2004, You should check correct slope in the ' +
+        'checkedBox below'
+      Caption = 'Eight Px method'
+      TabOrder = 13
+    end
+    object CheckBox2: TCheckBox
+      Left = 15
+      Top = 175
+      Width = 111
+      Height = 17
+      Hint = 'step-square slope'
+      Caption = 'step-squared slope'
+      Checked = True
+      State = cbChecked
+      TabOrder = 14
+    end
+    object RadioButton4: TRadioButton
+      Left = 3
+      Top = 137
+      Width = 103
+      Height = 17
+      Hint = 
+        'Max-diff method by Sun, 2004, You should check correct slope in ' +
+        'the checkedBox below'
+      Caption = 'Max-difference'
+      TabOrder = 15
+    end
+    object RadioButton5: TRadioButton
+      Left = 2
+      Top = 152
+      Width = 113
+      Height = 17
+      Hint = 
+        'mean-diff method by Sun, 2004, You should check correct slope in' +
+        ' the checkedBox below'
+      Caption = 'Mean-difference'
+      TabOrder = 16
     end
   end
   object Memo1: TMemo
