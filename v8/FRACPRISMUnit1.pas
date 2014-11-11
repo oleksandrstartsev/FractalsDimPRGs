@@ -682,18 +682,21 @@ if Form1.RadioButton4.Checked then //open a section for Max-diff method;
       c:=matrix[row][col+step];
 	    e:=matrix[row+step][col+step];
       g:=matrix[row+step][col];
+ (* o is the center point of four pixel values*)
+      o:=matrix[row+round(step*0.5)][col+round(step*0.5)];
  (*declare four middle edge points*)
 
       v1:=0; v2:=0;v3:=0;v4:=0;
-  for j :=0 to step do
+  for j :=0 to step do //Find a corner element of a square with max deviation
+  //from the central element's value
      begin
-      if matrix[row][col+v1]<matrix[row][col+j] then
+      if Abs(matrix[row][col+v1]-o)<abs(matrix[row][col+j] -o) then
       v1:=j;
-      if matrix[row+v2][col+step]<matrix[row+j][col+step] then
+      if abs(matrix[row+v2][col+step]-o)<abs(matrix[row+j][col+step]-o) then
       v2:=j;
-      if matrix[row+step][col+v3]<matrix[row+step][col+j] then
+      if abs(matrix[row+step][col+v3]-o)<abs(matrix[row+step][col+j]-o) then
       v3:=j;
-      if matrix[row+v4][col]<matrix[row+j][col] then
+      if abs(matrix[row+v4][col]-o)<abs(matrix[row+j][col]-o) then
       v4:=j;
        end;
 
@@ -701,8 +704,7 @@ if Form1.RadioButton4.Checked then //open a section for Max-diff method;
       d:=matrix[row+v2][col+step];
 	    f:=matrix[row+step][col+v3];
       h:=matrix[row+v4][col];
-(* o is the center point of four pixel values*)
-      o:=matrix[row+round(step/2)][col+round(step/2)];
+
 (*ab..ha are external sides of the square   *)
 	    ab:=sqrt((a-b)*(a-b)+v1*v1);
       bc:=sqrt((b-c)*(b-c)+(side-v1)*(side-v1));
@@ -719,13 +721,13 @@ if Form1.RadioButton4.Checked then //open a section for Max-diff method;
       fh:=sqrt((f-h)*(f-h)+v3*v3+(side-v4)*(side-v4));
 
       ob:=sqrt((o-b)*(o-b)+Power(v1-0.5*side,2)+
-          +Power(round(side/2),2));
+          +Power(round(side*0.5),2));
       od:=sqrt((o-d)*(o-d)+Power(v2-0.5*side,2)+
-          +Power(round(side/2),2));
+          +Power(round(0.5*side),2));
       ofs:=sqrt((o-f)*(o-f)+Power(v3-0.5*side,2)+
-          +Power(round(side/2),2));
+          +Power(round(0.5*side),2));
       oh:=sqrt((o-h)*(o-h)+Power(v4-0.5*side,2)+
-          +Power(round(side/2),2));
+          +Power(round(0.5*side),2));
 (* Compute values from Heron's formula       *)
 SetLength(tp,8);  //semiperimeter;
 	    tp[0]:=0.5*(ha+ab+hb);
@@ -881,7 +883,6 @@ Var	 row, col, step,gh: integer;
    while (row<end_row-1) do begin
 
    col:=begin_col-1;
-
    while(col<end_col-1) do begin
    gh:=0;
 
