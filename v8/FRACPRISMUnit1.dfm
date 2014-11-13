@@ -2,7 +2,7 @@ object Form1: TForm1
   Left = 0
   Top = 0
   Caption = 'FRAC3D PRISM'
-  ClientHeight = 544
+  ClientHeight = 660
   ClientWidth = 739
   Color = clGray
   Font.Charset = DEFAULT_CHARSET
@@ -19,7 +19,7 @@ object Form1: TForm1
     Left = 8
     Top = 8
     Width = 153
-    Height = 537
+    Height = 657
     TabOrder = 0
     object SpeedButton1: TSpeedButton
       Left = 5
@@ -32,7 +32,7 @@ object Form1: TForm1
     end
     object SpeedButton2: TSpeedButton
       Left = 0
-      Top = 281
+      Top = 401
       Width = 145
       Height = 22
       Hint = 
@@ -43,7 +43,7 @@ object Form1: TForm1
     end
     object ClearButton: TSpeedButton
       Left = 88
-      Top = 494
+      Top = 614
       Width = 50
       Height = 34
       Caption = 'Clear'
@@ -51,7 +51,7 @@ object Form1: TForm1
     end
     object SpeedButton3: TSpeedButton
       Left = 5
-      Top = 494
+      Top = 614
       Width = 45
       Height = 34
       Caption = 'Font -'
@@ -59,7 +59,7 @@ object Form1: TForm1
     end
     object SpeedButton4: TSpeedButton
       Left = 43
-      Top = 494
+      Top = 614
       Width = 48
       Height = 34
       Caption = 'Font+'
@@ -72,6 +72,8 @@ object Form1: TForm1
       Height = 22
       Hint = 'test Clarke'#39's "86 on a sample file: image .txt'
       Caption = 'test Clarke'#39's as "85'
+      Enabled = False
+      Visible = False
       OnClick = SpeedButton5Click
     end
     object SpeedButton6: TSpeedButton
@@ -93,29 +95,36 @@ object Form1: TForm1
       OnClick = SpeedButton7Click
     end
     object Label1: TLabel
-      Left = 13
-      Top = 367
+      Left = 17
+      Top = 487
       Width = 26
       Height = 13
       Caption = 'steps'
     end
     object Label2: TLabel
-      Left = 3
-      Top = 318
+      Left = 7
+      Top = 438
       Width = 47
       Height = 13
       Caption = 'NUMROW'
     end
     object Label3: TLabel
-      Left = 2
-      Top = 337
+      Left = 6
+      Top = 457
       Width = 42
       Height = 13
       Caption = 'NUMCOL'
     end
+    object Label4: TLabel
+      Left = 16
+      Top = 80
+      Width = 76
+      Height = 13
+      Caption = 'Geometric step:'
+    end
     object CheckBox1: TCheckBox
       Left = 13
-      Top = 441
+      Top = 561
       Width = 108
       Height = 17
       Caption = 'Show data saving'
@@ -165,7 +174,7 @@ object Form1: TForm1
     end
     object Swich1: TCheckBox
       Left = 13
-      Top = 457
+      Top = 577
       Width = 97
       Height = 17
       Caption = 'Swich #1'
@@ -175,15 +184,15 @@ object Form1: TForm1
     end
     object ShowInput: TCheckBox
       Left = 13
-      Top = 471
+      Top = 591
       Width = 97
       Height = 17
       Caption = 'Show Input'
       TabOrder = 5
     end
     object LabeledEdit7: TSpinEdit
-      Left = 45
-      Top = 365
+      Left = 61
+      Top = 485
       Width = 65
       Height = 22
       MaxValue = 21
@@ -206,8 +215,8 @@ object Form1: TForm1
       Visible = False
     end
     object LabeledEdit1: TSpinEdit
-      Left = 56
-      Top = 309
+      Left = 60
+      Top = 429
       Width = 65
       Height = 22
       MaxValue = 5000
@@ -216,8 +225,8 @@ object Form1: TForm1
       Value = 17
     end
     object LabeledEdit2: TSpinEdit
-      Left = 56
-      Top = 337
+      Left = 60
+      Top = 457
       Width = 65
       Height = 22
       MaxValue = 5000
@@ -228,16 +237,16 @@ object Form1: TForm1
     object RadioGroup1: TRadioGroup
       Left = 0
       Top = 64
-      Width = 145
-      Height = 183
+      Width = 153
+      Height = 331
       Caption = 'Clarke methods'
       TabOrder = 10
     end
     object RadioButton1: TRadioButton
-      Left = 13
-      Top = 76
-      Width = 113
-      Height = 17
+      Left = 7
+      Top = 92
+      Width = 119
+      Height = 32
       Hint = 'step-squared slope'
       Caption = 'classic Clarke'#39's "86'
       Checked = True
@@ -246,8 +255,8 @@ object Form1: TForm1
       OnClick = RadioButton1Click
     end
     object RadioButton2: TRadioButton
-      Left = 13
-      Top = 91
+      Left = 6
+      Top = 115
       Width = 113
       Height = 17
       Hint = 'not step-squared slope'
@@ -256,8 +265,8 @@ object Form1: TForm1
       OnClick = RadioButton2Click
     end
     object RadioButton3: TRadioButton
-      Left = 3
-      Top = 114
+      Left = 6
+      Top = 130
       Width = 103
       Height = 32
       Hint = 
@@ -268,8 +277,8 @@ object Form1: TForm1
       OnClick = RadioButton3Click
     end
     object CheckBox2: TCheckBox
-      Left = 27
-      Top = 221
+      Left = 15
+      Top = 370
       Width = 111
       Height = 17
       Hint = 'step-square slope'
@@ -277,8 +286,8 @@ object Form1: TForm1
       TabOrder = 14
     end
     object RadioButton4: TRadioButton
-      Left = 3
-      Top = 137
+      Left = 6
+      Top = 153
       Width = 103
       Height = 17
       Hint = 
@@ -289,8 +298,8 @@ object Form1: TForm1
       OnClick = RadioButton1Click
     end
     object RadioButton5: TRadioButton
-      Left = 2
-      Top = 152
+      Left = 6
+      Top = 168
       Width = 113
       Height = 17
       Hint = 
@@ -301,8 +310,8 @@ object Form1: TForm1
       OnClick = RadioButton1Click
     end
     object RadioButton6: TRadioButton
-      Left = 2
-      Top = 175
+      Left = 5
+      Top = 204
       Width = 136
       Height = 17
       Caption = 'arithmetic-step method'
@@ -310,11 +319,11 @@ object Form1: TForm1
       OnClick = RadioButton6Click
     end
     object RadioButton7: TRadioButton
-      Left = 2
-      Top = 198
+      Left = 6
+      Top = 227
       Width = 136
       Height = 17
-      Caption = 'divisor-step'
+      Caption = 'divisor-step method'
       TabOrder = 18
       OnClick = RadioButton6Click
     end
@@ -322,8 +331,8 @@ object Form1: TForm1
   object Memo1: TMemo
     Left = 199
     Top = 16
-    Width = 449
-    Height = 472
+    Width = 514
+    Height = 226
     Color = clInfoText
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clLime
@@ -336,7 +345,7 @@ object Form1: TForm1
   end
   object Panel2: TPanel
     Left = 0
-    Top = 373
+    Top = 493
     Width = 161
     Height = 58
     TabOrder = 2
@@ -369,5 +378,52 @@ object Form1: TForm1
       Caption = 'coverage ratio normalization'
       TabOrder = 1
     end
+  end
+  object RadioGroup2: TRadioGroup
+    Left = 19
+    Top = 258
+    Width = 137
+    Height = 114
+    Caption = 'choose area method'
+    TabOrder = 3
+    Visible = False
+  end
+  object RadioButton8: TRadioButton
+    Left = 27
+    Top = 281
+    Width = 113
+    Height = 17
+    Caption = 'Clarke'#39's 4 triangles'
+    Checked = True
+    TabOrder = 4
+    TabStop = True
+    Visible = False
+  end
+  object RadioButton11: TRadioButton
+    Left = 27
+    Top = 350
+    Width = 113
+    Height = 17
+    Caption = 'Mean-difference'
+    TabOrder = 5
+    Visible = False
+  end
+  object RadioButton10: TRadioButton
+    Left = 27
+    Top = 327
+    Width = 113
+    Height = 17
+    Caption = 'Max-difference'
+    TabOrder = 6
+    Visible = False
+  end
+  object RadioButton9: TRadioButton
+    Left = 27
+    Top = 304
+    Width = 113
+    Height = 17
+    Caption = '8px '
+    TabOrder = 7
+    Visible = False
   end
 end

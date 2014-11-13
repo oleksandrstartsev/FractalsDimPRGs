@@ -44,6 +44,12 @@ type
     LabeledEdit8: TLabeledEdit;
     CheckBox3: TCheckBox;
     RadioButton7: TRadioButton;
+    RadioGroup2: TRadioGroup;
+    RadioButton8: TRadioButton;
+    RadioButton11: TRadioButton;
+    RadioButton10: TRadioButton;
+    RadioButton9: TRadioButton;
+    Label4: TLabel;
     procedure ClearButtonClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure FormResize(Sender: TObject);
@@ -86,7 +92,8 @@ rowmax, colmax, steps, begin_row, end_row,begin_col, end_col, timex:integer;
   myFile1,mysaveFile1 : TextFile;
   Sarray1: array of string;
   Iarray1: array of array of double;  //end file variables;
-  window_size:integer;
+  window_size, num_divisors:integer;
+   divisors: array of integer;
 implementation
 
 {$R *.dfm}
@@ -439,101 +446,251 @@ rowmax:=numrow; colmax:=numcol;
 
 end;
 
-procedure fractal();   //Clarke Method 18-08-1985
-Var	 row, col, step,gh: integer;
-    side, diag:double;
+function fourTriangles(row1,col1,step1:integer):double;
+ Var
+    diag1:double;
+     a1,b1,c1,d1,e1,w1,x1,y1,z1,o1,p1,q1,r1,sa1,sb1,sc1,sd1,
+           aa1 :double;
+begin
+  diag1:=step1*sqrt(2.0)/2.0;
+      a1:=matrix[row1][col1];
+      b1:=matrix[row1][col1+step1];
+	    c1:=matrix[row1+step1][col1+step1];
+      d1:=matrix[row1+step1][col1];
 
-     a,b,c,d,e,w,x,y,z,o,p,q,r,sa,sb,sc,sd,
-           aa,ab,ac,ad, surface_area :double;
- Begin step:= 1;     gh:=0;
+(* e1 is the center point of four pixel values*)
+      e1:=0.25*(a1+b1+c1+d1);
+(*w1,x1,y1,z1 are external sides of the square   *)
+	    w1:=sqrt((a1-b1)*(a1-b1)+step1*step1);
+      x1:=sqrt((b1-c1)*(b1-c1)+step1*step1);
+      y1:=sqrt((c1-d1)*(c1-d1)+step1*step1);
+      z1:=sqrt((a1-d1)*(a1-d1)+step1*step1);
+(* o1,p1,q1,r1 are internal sides of triangles   *)
+	    o1:=sqrt((a1-e1)*(a1-e1)+diag1*diag1);
+      p1:=sqrt((b1-e1)*(b1-e1)+diag1*diag1);
+      q1:=sqrt((c1-e1)*(c1-e1)+diag1*diag1);
+      r1:=sqrt((d1-e1)*(d1-e1)+diag1*diag1);
+(* Compute values from Heron's formula       *)
+	    sa1:=0.5*(w1+p1+o1);
+      sb1:=0.5*(x1+p1+q1);
+      sc1:=0.5*(y1+q1+r1);
+      sd1:=0.5*(z1+o1+r1);
+(* Solve areas from Heron's formula       *)
+	    aa1:=sqrt(abs(sa1*(sa1-w1)*(sa1-p1)*(sa1-o1)));
+      aa1:=aa1+sqrt(abs(sb1*(sb1-x1)*(sb1-p1)*(sb1-q1)));
+      aa1:=aa1+sqrt(abs(sc1*(sc1-y1)*(sc1-q1)*(sc1-r1)));
+      aa1:=aa1+sqrt(abs(sd1*(sd1-z1)*(sd1-o1)*(sd1-r1)));
+   fourTriangles:=aa1;
+
+end;
+
+function epxArea(identity,row1,col1,step1:integer):double;
+ Var
+    diag1:double;
+     a1,b1,c1,d1,e1,w1,x1,y1,z1,o1,p1,q1,r1,sa1,sb1,sc1,sd1,
+           aa1 :double;
+  j,v1,v2,v3,v4: integer;
+     g1,f1,h1,ab1,bc1,cd1,de1,ef1,fg1,ghs1,ha1,
+     oa1,ob1,oc1,od1,oe1,ofs1,og1,oh1,
+     ta1,hb1,bd1,df1,fh1,
+     mean1,mean2,mean3,mean4,
+     windowsize1 :double;
+     tp1: array of double;
+
+begin
+if identity=1 then begin
+
+  diag1:=step1*sqrt(2.0)/2.0;
+//Eight triangles for @Sun method;
+ (*declare four corner edge points*)
+      a1:=matrix[row1][col1];
+      c1:=matrix[row1][col1+step1];
+	    e1:=matrix[row1+step1][col1+step1];
+      g1:=matrix[row1+step1][col1];
+ (*declare four middle edge points*)
+      b1:=matrix[row1][col1+round(step1/2)];
+      d1:=matrix[row1+round(step1/2)][col1+step1];
+	    f1:=matrix[row1+step1][col1+round(step1/2)];
+      h1:=matrix[row1+round(step1/2)][col1];
+(* o1 is the center point of our local window (step1+1).x.(step1+1) *)
+      o1:=matrix[row1+round(step1/2)][col1+round(step1/2)];
+(*ab1..ha1 are external sides of the square   *)
+	    ab1:=sqrt((a1-b1)*(a1-b1)+0.25*step1*step1);
+      bc1:=sqrt((b1-c1)*(b1-c1)+0.25*step1*step1);
+      cd1:=sqrt((c1-d1)*(c1-d1)+0.25*step1*step1);
+      de1:=sqrt((d1-e1)*(d1-e1)+0.25*step1*step1);
+      ef1:=sqrt((e1-f1)*(e1-f1)+0.25*step1*step1);
+      fg1:=sqrt((f1-g1)*(f1-g1)+0.25*step1*step1);
+      ghs1:=sqrt((g1-h1)*(g1-h1)+0.25*step1*step1);
+      ha1:=sqrt((h1-a1)*(h1-a1)+0.25*step1*step1);
+(* oa1..oh1 are internal sides of triangles   *)
+	    oa1:=sqrt((o1-a1)*(o1-a1)+diag1*diag1);
+      oc1:=sqrt((o1-c1)*(o1-c1)+diag1*diag1);
+      oe1:=sqrt((o1-e1)*(o1-e1)+diag1*diag1);
+      og1:=sqrt((o1-g1)*(o1-g1)+diag1*diag1);
+
+      ob1:=sqrt((o1-b1)*(o1-b1)+step1*step1*0.25);
+      od1:=sqrt((o1-d1)*(o1-d1)+step1*step1*0.25);
+      ofs1:=sqrt((o1-f1)*(o1-f1)+step1*step1*0.25);
+      oh1:=sqrt((o1-h1)*(o1-h1)+step1*step1*0.25);
+
+      (* Compute values from Heron's formula       *)
+SetLength(tp1,8);  //semiperimeter;
+	    tp1[0]:=0.5*(ab1+oa1+ob1);
+      tp1[1]:=0.5*(bc1+ob1+oc1);
+      tp1[2]:=0.5*(cd1+oc1+od1);
+      tp1[3]:=0.5*(de1+od1+oe1);
+      tp1[4]:=0.5*(ef1+oe1+ofs1);
+      tp1[5]:=0.5*(fg1+ofs1+og1);
+      tp1[6]:=0.5*(ghs1+og1+oh1);
+      tp1[7]:=0.5*(ha1+oh1+oa1);
+(* Obtain areas from Heron's formula       *)
+ta1:=0;
+     ta1:=sqrt(abs(tp1[0]*(tp1[0]-ab1)*(tp1[0]-oa1)*(tp1[0]-ob1)));
+      ta1:=ta1+sqrt(abs(tp1[1]*(tp1[1]-bc1)*(tp1[1]-ob1)*(tp1[1]-oc1)));
+       ta1:=ta1+sqrt(abs(tp1[2]*(tp1[2]-cd1)*(tp1[2]-oc1)*(tp1[2]-od1)));
+        ta1:=ta1+sqrt(abs(tp1[3]*(tp1[3]-de1)*(tp1[3]-od1)*(tp1[3]-oe1)));
+         ta1:=ta1+sqrt(abs(tp1[4]*(tp1[4]-ef1)*(tp1[4]-oe1)*(tp1[4]-ofs1)));
+          ta1:=ta1+sqrt(abs(tp1[5]*(tp1[5]-fg1)*(tp1[5]-ofs1)*(tp1[5]-og1)));
+           ta1:=ta1+sqrt(abs(tp1[6]*(tp1[6]-ghs1)*(tp1[6]-og1)*(tp1[6]-oh1)));
+            ta1:=ta1+sqrt(abs(tp1[7]*(tp1[7]-ha1)*(tp1[7]-oh1)*(tp1[7]-oa1)));
+
+  end;
+
+  if (identity=2) or (identity=3)  then  begin
+  (*declare four corner edge points*)
+      a1:=matrix[row1][col1];
+      c1:=matrix[row1][col1+step1];
+	    e1:=matrix[row1+step1][col1+step1];
+      g1:=matrix[row1+step1][col1];
+ (* o1 is the center point of four pixel values*)
+      o1:=matrix[row1+round(step1*0.5)][col1+round(step1*0.5)];
+ (*declare four middle edge points*)
+
+ if identity=3 then begin
+     mean1:=0;mean2:=0; mean3:=0; mean4:=0;
+     for j := 0 to step1 do
+           begin
+             mean1:=mean1+abs(matrix[row1][col1+j] -o1);
+             mean2:=mean2+abs(matrix[row1+j][col1+step1]-o1);
+             mean3:=mean3+abs(matrix[row1+step1][col1+j]-o1);
+             mean4:=mean4+abs(matrix[row1+j][col1]-o1);
+           end;
+           mean1:=mean1/(step1+1);
+           mean2:=mean2/(step1+1);
+           mean3:=mean3/(step1+1);
+           mean4:=mean4/(step1+1);
+ end;
+
+
+      v1:=0; v2:=0;v3:=0;v4:=0;
+  for j :=0 to step1 do //Find a corner element of a square with max deviation
+  //from the central element's value
+     begin
+    if identity = 2 then begin
+
+      if Abs(matrix[row1][col1+v1]-o1)<abs(matrix[row1][col1+j] -o1) then
+      v1:=j;
+      if abs(matrix[row1+v2][col1+step1]-o1)<abs(matrix[row1+j][col1+step1]-o1) then
+      v2:=j;
+      if abs(matrix[row1+step1][col1+v3]-o1)<abs(matrix[row1+step1][col1+j]-o1) then
+      v3:=j;
+      if abs(matrix[row1+v4][col1]-o1)<abs(matrix[row1+j][col1]-o1) then
+      v4:=j;
+    end;
+   if identity = 3 then begin
+      if abs(Abs(matrix[row1][col1+v1]-o1)-mean1)>abs(abs(matrix[row1][col1+j] -o1)-mean1) then
+      v1:=j;
+      if abs(abs(matrix[row1+v2][col1+step1]-o1)-mean2)>abs(abs(matrix[row1+j][col1+step1]-o1)-mean2) then
+      v2:=j;
+      if abs(abs(matrix[row1+step1][col1+v3]-o1)-mean3)>abs(abs(matrix[row1+step1][col1+j]-o1)-mean3) then
+      v3:=j;
+      if abs(abs(matrix[row1+v4][col1]-o1)-mean4)>abs(abs(matrix[row1+j][col1]-o1)-mean4) then
+      v4:=j;
+   end;
+
+
+       end;
+
+      b1:=matrix[row1][col1+v1];
+      d1:=matrix[row1+v2][col1+step1];
+	    f1:=matrix[row1+step1][col1+v3];
+      h1:=matrix[row1+v4][col1];
+
+(*ab1..ha1 are external sides of the square   *)
+	    ab1:=sqrt((a1-b1)*(a1-b1)+v1*v1);
+      bc1:=sqrt((b1-c1)*(b1-c1)+(step1-v1)*(step1-v1));
+      cd1:=sqrt((c1-d1)*(c1-d1)+v2*v2);
+      de1:=sqrt((d1-e1)*(d1-e1)+(step1-v2)*(step1-v2));
+      ef1:=sqrt((e1-f1)*(e1-f1)+(step1-v3)*(step1-v3));
+      fg1:=sqrt((f1-g1)*(f1-g1)+v3*v3);
+      ghs1:=sqrt((g1-h1)*(g1-h1)+(step1-v4)*(step1-v4));
+      ha1:=sqrt((h1-a1)*(h1-a1)+v4*v4);
+(* oa..oh are internal sides of triangles   *)
+	    hb1:=sqrt((h1-b1)*(h1-b1)+v4*v4+v1*v1);
+      bd1:=sqrt((b1-d1)*(b1-d1)+(step1-v1)*(step1-v1)+v2*v2);
+      df1:=sqrt((d1-f1)*(d1-f1)+(step1-v2)*(step1-v2)+(step1-v3)*(step1-v3));
+      fh1:=sqrt((f1-h1)*(f1-h1)+v3*v3+(step1-v4)*(step1-v4));
+
+      ob1:=sqrt((o1-b1)*(o1-b1)+Power(v1-0.5*step1,2)+
+          +Power(round(step1*0.5),2));
+      od1:=sqrt((o1-d1)*(o1-d1)+Power(v2-0.5*step1,2)+
+          +Power(round(0.5*step1),2));
+      ofs1:=sqrt((o1-f1)*(o1-f1)+Power(v3-0.5*step1,2)+
+          +Power(round(0.5*step1),2));
+      oh1:=sqrt((o1-h1)*(o1-h1)+Power(v4-0.5*step1,2)+
+          +Power(round(0.5*step1),2));
+
+(* Compute values from Heron's formula       *)
+SetLength(tp1,8);  //semiperimeter;
+	    tp1[0]:=0.5*(ha1+ab1+hb1);
+      tp1[1]:=0.5*(hb1+ob1+oh1);
+      tp1[2]:=0.5*(bd1+ob1+od1);
+      tp1[3]:=0.5*(bd1+bc1+cd1);
+      tp1[4]:=0.5*(od1+df1+ofs1);
+      tp1[5]:=0.5*(df1+de1+ef1);
+      tp1[6]:=0.5*(ofs1+fh1+oh1);
+      tp1[7]:=0.5*(fh1+fg1+ghs1);
+
+(* Obtain areas from Heron's formula       *)
+ta1:=0;
+     ta1:=sqrt(abs(tp1[0]*(tp1[0]-ha1)*(tp1[0]-ab1)*(tp1[0]-hb1)));
+      ta1:=ta1+sqrt(abs(tp1[1]*(tp1[1]-hb1)*(tp1[1]-ob1)*(tp1[1]-oh1)));
+       ta1:=ta1+sqrt(abs(tp1[2]*(tp1[2]-bd1)*(tp1[2]-ob1)*(tp1[2]-od1)));
+        ta1:=ta1+sqrt(abs(tp1[3]*(tp1[3]-bd1)*(tp1[3]-bc1)*(tp1[3]-cd1)));
+         ta1:=ta1+sqrt(abs(tp1[4]*(tp1[4]-od1)*(tp1[4]-df1)*(tp1[4]-ofs1)));
+          ta1:=ta1+sqrt(abs(tp1[5]*(tp1[5]-df1)*(tp1[5]-de1)*(tp1[5]-ef1)));
+           ta1:=ta1+sqrt(abs(tp1[6]*(tp1[6]-ofs1)*(tp1[6]-fh1)*(tp1[6]-oh1)));
+            ta1:=ta1+sqrt(abs(tp1[7]*(tp1[7]-fh1)*(tp1[7]-fg1)*(tp1[7]-ghs1)));
+
+  end;
+
+
+epxArea:=ta1;
+
+end;
+
+procedure fractal();   //Clarke Method 18-08-1985
+Var	 row, col, step: integer;
+    surface_area :double;
+ Begin step:= 1;
        SetLength(area,100);
        SetLength(resolution,100);
 (*Repeat for area sequence 1,4,16,64,256 etc. *)
-
    for timex:=1 to steps do begin
    surface_area:=0.0;
-     (*Set length of sides of triangles *)
-   side:=step;
-   diag:=step*sqrt(2.0)/2.0;
   (*Process whole array at this size *)
     row:=begin_row-1;
-   while (row<end_row-1) do begin
-
-   col:=begin_col-1;
-
-   while(col<end_col-1) do begin
-   gh:=0;
-
-  (*
-    //  Form1.Memo1.Lines.Add(InttoStr(row)+','+InttoStr(col)+' ; '+Inttostr(step));
-   if (step=2)and((row-begin_row>0)or(col-begin_col>0)) then  begin
-    //   Form1.Memo1.Lines.Add(InttoStr(row)+'>1,'+InttoStr(col)+'>1 ; '
-    //   +Inttostr(step));
-     if row-begin_row>0 then
-         begin  // Form1.Memo1.Lines.Add(InttoStr(row)+'row');
-         row:=row-1;//Form1.Memo1.Lines.Add(InttoStr(row)+'row--');
-         gh:=1;
-         end;
-      if col-begin_col>0 then
-         begin// Form1.Memo1.Lines.Add(InttoStr(col)+'col ');
-         col:=col-1;// Form1.Memo1.Lines.Add(InttoStr(col)+'col--');
-         gh:=gh+3;
-          end;
-  end;
-        *)
-
-//     (*if (step=2) then *) if row>11 then
-// Form1.Memo1.Lines.Add(InttoStr(row)+'.,'+InttoStr(col)+'. ; st:: '+
-// Inttostr(step)+ ' ,gh='+Inttostr(gh) );
-
-      a:=matrix[row][col];
-      b:=matrix[row][col+step];
-	    c:=matrix[row+step][col+step];
-      d:=matrix[row+step][col];
-
-(* e is the center point of four pixel values*)
-      e:=0.25*(a+b+c+d);
-(*w,x,y,z are external sides of the square   *)
-	    w:=sqrt((a-b)*(a-b)+side*side);
-      x:=sqrt((b-c)*(b-c)+side*side);
-      y:=sqrt((c-d)*(c-d)+side*side);
-      z:=sqrt((a-d)*(a-d)+side*side);
-(* o,p,q,r are internal sides of triangles   *)
-	    o:=sqrt((a-e)*(a-e)+diag*diag);
-      p:=sqrt((b-e)*(b-e)+diag*diag);
-      q:=sqrt((c-e)*(c-e)+diag*diag);
-      r:=sqrt((d-e)*(d-e)+diag*diag);
-(* Compute values from Heron's formula       *)
-	    sa:=0.5*(w+p+o);
-      sb:=0.5*(x+p+q);
-      sc:=0.5*(y+q+r);
-      sd:=0.5*(z+o+r);
-(* Solve areas from Heron's formula       *)
-	    aa:=sqrt(abs(sa*(sa-w)*(sa-p)*(sa-o)));
-      ab:=sqrt(abs(sb*(sb-x)*(sb-p)*(sb-q)));
-      ac:=sqrt(abs(sc*(sc-y)*(sc-q)*(sc-r)));
-      ad:=sqrt(abs(sd*(sd-z)*(sd-o)*(sd-r)));
-(* Add to total surface area                 *)
-	  surface_area:= surface_area+aa+ab+ac+ad;
-
-
-
-
-    (*     if gh<>0 then
-         begin
-           if gh=1 then begin row:=row+1;gh:=0; end;
-           if gh=3 then begin col:=col+1; gh:=0; end;
-           if gh=4 then begin col:=col+1; row:=row+1; gh:=0; end;
-   //      Form1.Memo1.Lines.Add('mod renew::'+InttoStr(row)+','+Inttostr(col)+' gh='+InttoStr(gh));
-         end;       *)
-          col:=col+step;
-      end;
-
+   while (row<end_row-1) do
+    begin
+    col:=begin_col-1;
+       while(col<end_col-1) do begin
+(* Calculate area and add it to total surface area  *)
+	  surface_area:= surface_area+fourTriangles(row,col,step);
+       col:=col+step;
+        end;
        row:=row+step;
-
-
-
-   end;
+    end;
 (*Save area and resolution, increment step size*)
 	 area[timex]:= surface_area;
    if Form1.RadioButton1.Checked then
@@ -551,29 +708,17 @@ ENd;
 (*      Eight-Pixel Method by @Sun, November, 2004   *)
 (*==================================================*)
 procedure fractalEPx();
-Var	 row, col, step,gh,j,
-v1,v2,v3,v4: integer;
-    side, diag:double;
-     a,b,c,d,e,w,x,y,z,o,p,q,r,sa,sb,sc,sd,
-           aa,ab,ac,ad, surface_area,
-     g,f,h,bc,cd,de,ef,fg,ghs,ha,
-     oa,ob,oc,od,oe,ofs,og,oh,
-     ta,hb,bd,df,fh,
-     mean1,mean2,mean3,mean4,
-     windowsize :double;
-     tp,dividers: array of double;
- Begin step:= 1;     gh:=0;
+Var	 row, col, step,j,
+identifier: integer;
+      surface_area :double;
+
+ Begin step:= 1;
        SetLength(area,100);
        SetLength(resolution,100);
 
-
-(*Repeat for area sequence 2^0, 2^2, 2^3, etc. *)
-
    for timex:=1 to steps do begin
    surface_area:=0.0;
-     (*Set length of sides of triangles *)
-   side:=step;
-   diag:=step*sqrt(2.0)/2.0;
+
   (*Process whole array at this size *)
       row:=begin_row-1;
    while (row<end_row-1) do begin
@@ -581,38 +726,11 @@ v1,v2,v3,v4: integer;
       col:=begin_col-1;
 
    while(col<end_col-1) do begin
-   gh:=0;
+
          if step=1 then  beGin
 
-      a:=matrix[row][col];
-      b:=matrix[row][col+step];
-	    c:=matrix[row+step][col+step];
-      d:=matrix[row+step][col];
-
-(* e is the center point of four pixel values*)
-      e:=0.25*(a+b+c+d);
-(*w,x,y,z are external sides of the square   *)
-	    w:=sqrt((a-b)*(a-b)+side*side);
-      x:=sqrt((b-c)*(b-c)+side*side);
-      y:=sqrt((c-d)*(c-d)+side*side);
-      z:=sqrt((a-d)*(a-d)+side*side);
-(* o,p,q,r are internal sides of triangles   *)
-	    o:=sqrt((a-e)*(a-e)+diag*diag);
-      p:=sqrt((b-e)*(b-e)+diag*diag);
-      q:=sqrt((c-e)*(c-e)+diag*diag);
-      r:=sqrt((d-e)*(d-e)+diag*diag);
-(* Compute values from Heron's formula       *)
-	    sa:=0.5*(w+p+o);
-      sb:=0.5*(x+p+q);
-      sc:=0.5*(y+q+r);
-      sd:=0.5*(z+o+r);
-(* Solve areas from Heron's formula       *)
-	    aa:=sqrt(abs(sa*(sa-w)*(sa-p)*(sa-o)));
-      ab:=sqrt(abs(sb*(sb-x)*(sb-p)*(sb-q)));
-      ac:=sqrt(abs(sc*(sc-y)*(sc-q)*(sc-r)));
-      ad:=sqrt(abs(sd*(sd-z)*(sd-o)*(sd-r)));
-(* Add to total surface area                 *)
-	    surface_area:= surface_area+aa+ab+ac+ad;
+(*Calculate area and add it to total surface area  *)
+	    surface_area:= surface_area+fourTriangles(row,col,step);
                             eNd else  begin
    (*try different Triangle Prism Methods by @Sun, 2004: max-difference method,
    mean-difference method, eight-pixel method*)
@@ -620,231 +738,24 @@ v1,v2,v3,v4: integer;
    if Form1.RadioButton3.Checked then //open a section for 8-px method;
 
                             beGin
- //Eight triangles for @Sun method;
- (*declare four corner edge points*)
-      a:=matrix[row][col];
-      c:=matrix[row][col+step];
-	    e:=matrix[row+step][col+step];
-      g:=matrix[row+step][col];
- (*declare four middle edge points*)
-      b:=matrix[row][col+round(step/2)];
-      d:=matrix[row+round(step/2)][col+step];
-	    f:=matrix[row+step][col+round(step/2)];
-      h:=matrix[row+round(step/2)][col];
-(* o is the center point of our local window (step+1).x.(step+1) *)
-      o:=matrix[row+round(step/2)][col+round(step/2)];
-(*ab..ha are external sides of the square   *)
-	    ab:=sqrt((a-b)*(a-b)+0.25*side*side);
-      bc:=sqrt((b-c)*(b-c)+0.25*side*side);
-      cd:=sqrt((c-d)*(c-d)+0.25*side*side);
-      de:=sqrt((d-e)*(d-e)+0.25*side*side);
-      ef:=sqrt((e-f)*(e-f)+0.25*side*side);
-      fg:=sqrt((f-g)*(f-g)+0.25*side*side);
-      ghs:=sqrt((g-h)*(g-h)+0.25*side*side);
-      ha:=sqrt((h-a)*(h-a)+0.25*side*side);
-(* oa..oh are internal sides of triangles   *)
-	    oa:=sqrt((o-a)*(o-a)+diag*diag);
-      oc:=sqrt((o-c)*(o-c)+diag*diag);
-      oe:=sqrt((o-e)*(o-e)+diag*diag);
-      og:=sqrt((o-g)*(o-g)+diag*diag);
-
-      ob:=sqrt((o-b)*(o-b)+side*side*0.25);
-      od:=sqrt((o-d)*(o-d)+side*side*0.25);
-      ofs:=sqrt((o-f)*(o-f)+side*side*0.25);
-      oh:=sqrt((o-h)*(o-h)+side*side*0.25);
-(* Compute values from Heron's formula       *)
-SetLength(tp,8);  //semiperimeter;
-	    tp[0]:=0.5*(ab+oa+ob);
-      tp[1]:=0.5*(bc+ob+oc);
-      tp[2]:=0.5*(cd+oc+od);
-      tp[3]:=0.5*(de+od+oe);
-      tp[4]:=0.5*(ef+oe+ofs);
-      tp[5]:=0.5*(fg+ofs+og);
-      tp[6]:=0.5*(gh+og+oh);
-      tp[7]:=0.5*(ha+oh+oa);
-(* Obtain areas from Heron's formula       *)
-ta:=0;
-     ta:=sqrt(abs(tp[0]*(tp[0]-ab)*(tp[0]-oa)*(tp[0]-ob)));
-      ta:=ta+sqrt(abs(tp[1]*(tp[1]-bc)*(tp[1]-ob)*(tp[1]-oc)));
-       ta:=ta+sqrt(abs(tp[2]*(tp[2]-cd)*(tp[2]-oc)*(tp[2]-od)));
-        ta:=ta+sqrt(abs(tp[3]*(tp[3]-de)*(tp[3]-od)*(tp[3]-oe)));
-         ta:=ta+sqrt(abs(tp[4]*(tp[4]-ef)*(tp[4]-oe)*(tp[4]-ofs)));
-          ta:=ta+sqrt(abs(tp[5]*(tp[5]-fg)*(tp[5]-ofs)*(tp[5]-og)));
-           ta:=ta+sqrt(abs(tp[6]*(tp[6]-gh)*(tp[6]-og)*(tp[6]-oh)));
-            ta:=ta+sqrt(abs(tp[7]*(tp[7]-ha)*(tp[7]-oh)*(tp[7]-oa)));
-(* Add to total surface area                 *)
-	  surface_area:= surface_area+ta;
-
+    identifier:=1;
+	  surface_area:= surface_area+epxArea(identifier,row,col,step);
                             eNd;
 
 if Form1.RadioButton4.Checked then //open a section for Max-diff method;
                             beGin
- (*declare four corner edge points*)
-      a:=matrix[row][col];
-      c:=matrix[row][col+step];
-	    e:=matrix[row+step][col+step];
-      g:=matrix[row+step][col];
- (* o is the center point of four pixel values*)
-      o:=matrix[row+round(step*0.5)][col+round(step*0.5)];
- (*declare four middle edge points*)
+    identifier:=2;
 
-      v1:=0; v2:=0;v3:=0;v4:=0;
-  for j :=0 to step do //Find a corner element of a square with max deviation
-  //from the central element's value
-     begin
-      if Abs(matrix[row][col+v1]-o)<abs(matrix[row][col+j] -o) then
-      v1:=j;
-      if abs(matrix[row+v2][col+step]-o)<abs(matrix[row+j][col+step]-o) then
-      v2:=j;
-      if abs(matrix[row+step][col+v3]-o)<abs(matrix[row+step][col+j]-o) then
-      v3:=j;
-      if abs(matrix[row+v4][col]-o)<abs(matrix[row+j][col]-o) then
-      v4:=j;
-       end;
-
-      b:=matrix[row][col+v1];
-      d:=matrix[row+v2][col+step];
-	    f:=matrix[row+step][col+v3];
-      h:=matrix[row+v4][col];
-
-(*ab..ha are external sides of the square   *)
-	    ab:=sqrt((a-b)*(a-b)+v1*v1);
-      bc:=sqrt((b-c)*(b-c)+(side-v1)*(side-v1));
-      cd:=sqrt((c-d)*(c-d)+v2*v2);
-      de:=sqrt((d-e)*(d-e)+(side-v2)*(side-v2));
-      ef:=sqrt((e-f)*(e-f)+(side-v3)*(side-v3));
-      fg:=sqrt((f-g)*(f-g)+v3*v3);
-      ghs:=sqrt((g-h)*(g-h)+(side-v4)*(side-v4));
-      ha:=sqrt((h-a)*(h-a)+v4*v4);
-(* oa..oh are internal sides of triangles   *)
-	    hb:=sqrt((h-b)*(h-b)+v4*v4+v1*v1);
-      bd:=sqrt((b-d)*(b-d)+(side-v1)*(side-v1)+v2*v2);
-      df:=sqrt((d-f)*(d-f)+(side-v2)*(side-v2)+(side-v3)*(side-v3));
-      fh:=sqrt((f-h)*(f-h)+v3*v3+(side-v4)*(side-v4));
-
-      ob:=sqrt((o-b)*(o-b)+Power(v1-0.5*side,2)+
-          +Power(round(side*0.5),2));
-      od:=sqrt((o-d)*(o-d)+Power(v2-0.5*side,2)+
-          +Power(round(0.5*side),2));
-      ofs:=sqrt((o-f)*(o-f)+Power(v3-0.5*side,2)+
-          +Power(round(0.5*side),2));
-      oh:=sqrt((o-h)*(o-h)+Power(v4-0.5*side,2)+
-          +Power(round(0.5*side),2));
-(* Compute values from Heron's formula       *)
-SetLength(tp,8);  //semiperimeter;
-	    tp[0]:=0.5*(ha+ab+hb);
-      tp[1]:=0.5*(hb+ob+oh);
-      tp[2]:=0.5*(bd+ob+od);
-      tp[3]:=0.5*(bd+bc+cd);
-      tp[4]:=0.5*(od+df+ofs);
-      tp[5]:=0.5*(df+de+ef);
-      tp[6]:=0.5*(ofs+fh+oh);
-      tp[7]:=0.5*(fh+fg+ghs);
-
-(* Obtain areas from Heron's formula       *)
-ta:=0;
-     ta:=sqrt(abs(tp[0]*(tp[0]-ha)*(tp[0]-ab)*(tp[0]-hb)));
-      ta:=ta+sqrt(abs(tp[1]*(tp[1]-hb)*(tp[1]-ob)*(tp[1]-oh)));
-       ta:=ta+sqrt(abs(tp[2]*(tp[2]-bd)*(tp[2]-ob)*(tp[2]-od)));
-        ta:=ta+sqrt(abs(tp[3]*(tp[3]-bd)*(tp[3]-bc)*(tp[3]-cd)));
-         ta:=ta+sqrt(abs(tp[4]*(tp[4]-od)*(tp[4]-df)*(tp[4]-ofs)));
-          ta:=ta+sqrt(abs(tp[5]*(tp[5]-df)*(tp[5]-de)*(tp[5]-ef)));
-           ta:=ta+sqrt(abs(tp[6]*(tp[6]-ofs)*(tp[6]-fh)*(tp[6]-oh)));
-            ta:=ta+sqrt(abs(tp[7]*(tp[7]-fh)*(tp[7]-fg)*(tp[7]-ghs)));
 (* Add to total surface area                 *)
-	  surface_area:= surface_area+ta;
+	  surface_area:= surface_area+epxArea(identifier,row,col,step);
                             eNd;
 
 
 if Form1.RadioButton5.Checked then //open a section for Mean-diff method;
                             beGin
- (*declare four corner edge points*)
-      a:=matrix[row][col];
-      c:=matrix[row][col+step];
-	    e:=matrix[row+step][col+step];
-      g:=matrix[row+step][col];
-      (* o is the center point of four pixel values*)
-
-    o:=matrix[row+round(step/2)][col+round(step/2)];
- (*declare four middle edge points*)
-         mean1:=0;mean2:=0; mean3:=0; mean4:=0;
-         for j := 0 to step do
-           begin
-             mean1:=mean1+abs(matrix[row][col+j] -o);
-             mean2:=mean2+abs(matrix[row+j][col+step]-o);
-             mean3:=mean3+abs(matrix[row+step][col+j]-o);
-             mean4:=mean4+abs(matrix[row+j][col]-o);
-           end;
-           mean1:=mean1/(step+1);
-           mean2:=mean2/(step+1);
-           mean3:=mean3/(step+1);
-           mean4:=mean4/(step+1);
-  v1:=0; v2:=0;v3:=0;v4:=0;
-  for j :=0 to step do
-     begin
-      if abs(Abs(matrix[row][col+v1]-o)-mean1)>abs(abs(matrix[row][col+j] -o)-mean1) then
-      v1:=j;
-      if abs(abs(matrix[row+v2][col+step]-o)-mean2)>abs(abs(matrix[row+j][col+step]-o)-mean2) then
-      v2:=j;
-      if abs(abs(matrix[row+step][col+v3]-o)-mean3)>abs(abs(matrix[row+step][col+j]-o)-mean3) then
-      v3:=j;
-      if abs(abs(matrix[row+v4][col]-o)-mean4)>abs(abs(matrix[row+j][col]-o)-mean4) then
-      v4:=j;
-       end;
-
-      b:=matrix[row][col+v1];
-      d:=matrix[row+v2][col+step];
-	    f:=matrix[row+step][col+v3];
-      h:=matrix[row+v4][col];
-
-(*ab..ha are external sides of the square   *)
-	    ab:=sqrt((a-b)*(a-b)+v1*v1);
-      bc:=sqrt((b-c)*(b-c)+(side-v1)*(side-v1));
-      cd:=sqrt((c-d)*(c-d)+v2*v2);
-      de:=sqrt((d-e)*(d-e)+(side-v2)*(side-v2));
-      ef:=sqrt((e-f)*(e-f)+(side-v3)*(side-v3));
-      fg:=sqrt((f-g)*(f-g)+v3*v3);
-      ghs:=sqrt((g-h)*(g-h)+(side-v4)*(side-v4));
-      ha:=sqrt((h-a)*(h-a)+v4*v4);
-(* oa..oh are internal sides of triangles   *)
-	    hb:=sqrt((h-b)*(h-b)+v4*v4+v1*v1);
-      bd:=sqrt((b-d)*(b-d)+(side-v1)*(side-v1)+v2*v2);
-      df:=sqrt((d-f)*(d-f)+(side-v2)*(side-v2)+(side-v3)*(side-v3));
-      fh:=sqrt((f-h)*(f-h)+v3*v3+(side-v4)*(side-v4));
-
-      ob:=sqrt((o-b)*(o-b)+Power(v1-0.5*side,2)+
-          +Power(round(side/2),2));
-      od:=sqrt((o-d)*(o-d)+Power(v2-0.5*side,2)+
-          +Power(round(side/2),2));
-      ofs:=sqrt((o-f)*(o-f)+Power(v3-0.5*side,2)+
-          +Power(round(side/2),2));
-      oh:=sqrt((o-h)*(o-h)+Power(v4-0.5*side,2)+
-          +Power(round(side/2),2));
-(* Compute values from Heron's formula       *)
-SetLength(tp,8);  //semiperimeter;
-	    tp[0]:=0.5*(ha+ab+hb);
-      tp[1]:=0.5*(hb+ob+oh);
-      tp[2]:=0.5*(bd+ob+od);
-      tp[3]:=0.5*(bd+bc+cd);
-      tp[4]:=0.5*(od+df+ofs);
-      tp[5]:=0.5*(df+de+ef);
-      tp[6]:=0.5*(ofs+fh+oh);
-      tp[7]:=0.5*(fh+fg+ghs);
-
-(* Obtain areas from Heron's formula       *)
-ta:=0;
-     ta:=sqrt(abs(tp[0]*(tp[0]-ha)*(tp[0]-ab)*(tp[0]-hb)));
-      ta:=ta+sqrt(abs(tp[1]*(tp[1]-hb)*(tp[1]-ob)*(tp[1]-oh)));
-       ta:=ta+sqrt(abs(tp[2]*(tp[2]-bd)*(tp[2]-ob)*(tp[2]-od)));
-        ta:=ta+sqrt(abs(tp[3]*(tp[3]-bd)*(tp[3]-bc)*(tp[3]-cd)));
-         ta:=ta+sqrt(abs(tp[4]*(tp[4]-od)*(tp[4]-df)*(tp[4]-ofs)));
-          ta:=ta+sqrt(abs(tp[5]*(tp[5]-df)*(tp[5]-de)*(tp[5]-ef)));
-           ta:=ta+sqrt(abs(tp[6]*(tp[6]-ofs)*(tp[6]-fh)*(tp[6]-oh)));
-            ta:=ta+sqrt(abs(tp[7]*(tp[7]-fh)*(tp[7]-fg)*(tp[7]-ghs)));
-(* Add to total surface area                 *)
-	  surface_area:= surface_area+ta;
+    identifier:=3;
+	  surface_area:= surface_area+epxArea(identifier,row,col,step);
                             eNd;
-
                             end;
     col:=col+step;
              end;
@@ -865,22 +776,19 @@ ENd;
 (*             arithmetic-step method               *)
 (*==================================================*)
 procedure fractalASM();   //ASM
-Var	 row, col, step: integer;
-    side, diag:double;
-
-     a,b,c,d,e,w,x,y,z,o,p,q,r,sa,sb,sc,sd,
-           aa,ab,ac,ad, surface_area,
-           gamma :double;
+Var	 row, col, step,identifier: integer;
+     surface_area, gamma :double;
  Begin step:= 1;
        SetLength(area,steps);
        SetLength(resolution,steps);
 
-
+if Form1.RadioButton8.Checked then identifier:=0;
+if Form1.RadioButton9.Checked then identifier:=1;
+if Form1.RadioButton10.Checked then identifier:=2;
+if Form1.RadioButton11.Checked then identifier:=3;
    for timex:=1 to steps-1 do begin
    surface_area:=0.0;
-     (*Set length of sides of triangles *)
-   side:=step;
-   diag:=step*sqrt(2.0)/2.0;
+
   (*Process whole array at this size *)
     row:=begin_row;
    while (row+step<=end_row) do begin
@@ -888,38 +796,13 @@ Var	 row, col, step: integer;
    col:=begin_col;
    while(col+step<=end_col) do begin
 
-      a:=matrix[row][col];
-      b:=matrix[row][col+step];
-	    c:=matrix[row+step][col+step];
-      d:=matrix[row+step][col];
+   (* Add to total surface area                 *)
 
-(* e is the center point of four pixel values*)
-      e:=0.25*(a+b+c+d);
-(*w,x,y,z are external sides of the square   *)
-	    w:=sqrt((a-b)*(a-b)+side*side);
-      x:=sqrt((b-c)*(b-c)+side*side);
-      y:=sqrt((c-d)*(c-d)+side*side);
-      z:=sqrt((a-d)*(a-d)+side*side);
-(* o,p,q,r are internal sides of triangles   *)
-	    o:=sqrt((a-e)*(a-e)+diag*diag);
-      p:=sqrt((b-e)*(b-e)+diag*diag);
-      q:=sqrt((c-e)*(c-e)+diag*diag);
-      r:=sqrt((d-e)*(d-e)+diag*diag);
-(* Compute values from Heron's formula       *)
-	    sa:=0.5*(w+p+o);
-      sb:=0.5*(x+p+q);
-      sc:=0.5*(y+q+r);
-      sd:=0.5*(z+o+r);
-(* Solve areas from Heron's formula       *)
-	    aa:=sqrt(abs(sa*(sa-w)*(sa-p)*(sa-o)));
-      ab:=sqrt(abs(sb*(sb-x)*(sb-p)*(sb-q)));
-      ac:=sqrt(abs(sc*(sc-y)*(sc-q)*(sc-r)));
-      ad:=sqrt(abs(sd*(sd-z)*(sd-o)*(sd-r)));
-(* Add to total surface area                 *)
-	  surface_area:= surface_area+aa+ab+ac+ad;
-(*Form1.Memo1.Lines.Add(Inttostr(step)+'= ['+InttoStr(col)+' ,'
-+Inttostr(row)+';: '+Floattostr(matrix[row,col])+', area= '+Floattostr(aa+ab+ac+ad));
-     *)
+   if (identifier=0)or(step=1) then
+	  surface_area:= surface_area+fourTriangles(row,col,step);
+   if (identifier<>0)and(step>1) then
+	  surface_area:= surface_area+epxArea(identifier,row,col,step);
+
         col:=col+step;
       end;
 
@@ -939,10 +822,6 @@ end else gamma:=1;  end else gamma:=1;
 	 if Form1.CheckBox2.Checked then //Qiu, Lam et al. modification;
 	     resolution[timex]:=step*step else
        resolution[timex]:=step;
-
- (*  Form1.Memo1.Lines.Add(Inttostr(timex)+'// ['+
-   Floattostr(resolution[timex])+', area= '+Floattostr( area[timex])+' ; h='+
-    Floattostr(holder));*)
 
    step:=step+1;
      end;
@@ -953,25 +832,23 @@ ENd;
 (*             divisor-step method               *)
 (*==================================================*)
 procedure fractalDSM();   //DSM
-Var	 row, col, step: integer;
-    side, diag:double;
+Var	 row, col, step,identifier: integer;
+     surface_area,gamma :double;
 
-     a,b,c,d,e,w,x,y,z,o,p,q,r,sa,sb,sc,sd,
-           aa,ab,ac,ad, surface_area,
-           gamma :double;
-     divisors, num_divisors: array of double;
- Begin step:= 1;
+ Begin
+ if Form1.RadioButton8.Checked then identifier:=0;
+if Form1.RadioButton9.Checked then identifier:=1;
+if Form1.RadioButton10.Checked then identifier:=2;
+if Form1.RadioButton11.Checked then identifier:=3;
+ step:= divisors[0];
 
-
+        steps:=num_divisors+1;
        SetLength(area,steps);
        SetLength(resolution,steps);
-
 
    for timex:=1 to steps-1 do begin
    surface_area:=0.0;
      (*Set length of sides of triangles *)
-   side:=step;
-   diag:=step*sqrt(2.0)/2.0;
   (*Process whole array at this size *)
     row:=begin_row;
    while (row+step<=end_row) do begin
@@ -979,38 +856,11 @@ Var	 row, col, step: integer;
    col:=begin_col;
    while(col+step<=end_col) do begin
 
-      a:=matrix[row][col];
-      b:=matrix[row][col+step];
-	    c:=matrix[row+step][col+step];
-      d:=matrix[row+step][col];
-
-(* e is the center point of four pixel values*)
-      e:=0.25*(a+b+c+d);
-(*w,x,y,z are external sides of the square   *)
-	    w:=sqrt((a-b)*(a-b)+side*side);
-      x:=sqrt((b-c)*(b-c)+side*side);
-      y:=sqrt((c-d)*(c-d)+side*side);
-      z:=sqrt((a-d)*(a-d)+side*side);
-(* o,p,q,r are internal sides of triangles   *)
-	    o:=sqrt((a-e)*(a-e)+diag*diag);
-      p:=sqrt((b-e)*(b-e)+diag*diag);
-      q:=sqrt((c-e)*(c-e)+diag*diag);
-      r:=sqrt((d-e)*(d-e)+diag*diag);
-(* Compute values from Heron's formula       *)
-	    sa:=0.5*(w+p+o);
-      sb:=0.5*(x+p+q);
-      sc:=0.5*(y+q+r);
-      sd:=0.5*(z+o+r);
-(* Solve areas from Heron's formula       *)
-	    aa:=sqrt(abs(sa*(sa-w)*(sa-p)*(sa-o)));
-      ab:=sqrt(abs(sb*(sb-x)*(sb-p)*(sb-q)));
-      ac:=sqrt(abs(sc*(sc-y)*(sc-q)*(sc-r)));
-      ad:=sqrt(abs(sd*(sd-z)*(sd-o)*(sd-r)));
-(* Add to total surface area                 *)
-	  surface_area:= surface_area+aa+ab+ac+ad;
-(*Form1.Memo1.Lines.Add(Inttostr(step)+'= ['+InttoStr(col)+' ,'
-+Inttostr(row)+';: '+Floattostr(matrix[row,col])+', area= '+Floattostr(aa+ab+ac+ad));
-     *)
+   (* Add to total surface area                 *)
+  if (identifier=0)or(step=1) then
+	  surface_area:= surface_area+fourTriangles(row,col,step);
+   if (identifier<>0)and(step>1) then
+	  surface_area:= surface_area+epxArea(identifier,row,col,step);
         col:=col+step;
       end;
 
@@ -1031,11 +881,7 @@ end else gamma:=1;  end else gamma:=1;
 	     resolution[timex]:=step*step else
        resolution[timex]:=step;
 
- (*  Form1.Memo1.Lines.Add(Inttostr(timex)+'// ['+
-   Floattostr(resolution[timex])+', area= '+Floattostr( area[timex])+' ; h='+
-    Floattostr(holder));*)
-
-   step:=step+1;
+   step:=divisors[timex];
      end;
    breakpoint1:=true;
 ENd;
@@ -1105,12 +951,10 @@ Var
 Begin
    resavg:=0.0; areaavg:=0.0; cross:=0.0; sumres:=0.0;
 		  sumarea:=0.0; dimension:=0.0; beta:=0.0; r:=0.0;
-//       Form1.Memo1.Lines.Add('');
-//   Form1.Memo1.Lines.Add(' Step Resolution Area ');
+
 (*Do log transform and compute means*)
   for n:=1 to length(area)-1 do begin
-//  Form1.Memo1.Lines.Add(InttoStr(n)+'  '+
-//   FloattoStr(resolution[n])+'  '+FloattoStr( area[n]));
+
    resolution[n]:=Ln(resolution[n]);
    area[n]:=Ln(area[n]);
    resavg:=resavg+resolution[n];
@@ -1159,7 +1003,7 @@ end;
 
 procedure TForm1.FormResize(Sender: TObject);
 begin
- Form1.Memo1.Width:=round(Form1.Width*0.7);
+ Form1.Memo1.Width:=round(Form1.Width*0.73);
 Form1.Memo1.Height:=round(Form1.Height*0.85);
  Form1.Memo1.Left:=round(Form1.Height*0.31);
  Form1.SpeedButton1.Width:=round(Form1.Height*0.25);
@@ -1179,24 +1023,44 @@ procedure TForm1.RadioButton1Click(Sender: TObject);
 begin
 fORM1.Panel2.Visible:=false;
 Form1.LabeledEdit7.Visible:=true;
+Form1.RadioGroup2.Visible:=false;
+Form1.RadioButton8.Visible:=false;
+Form1.RadioButton9.Visible:=false;
+Form1.RadioButton10.Visible:=false;
+Form1.RadioButton11.Visible:=false;
 end;
 
 procedure TForm1.RadioButton2Click(Sender: TObject);
 begin
 fORM1.Panel2.Visible:=false;
 Form1.LabeledEdit7.Visible:=true;
+Form1.RadioGroup2.Visible:=false;
+Form1.RadioButton8.Visible:=false;
+Form1.RadioButton9.Visible:=false;
+Form1.RadioButton10.Visible:=false;
+Form1.RadioButton11.Visible:=false;
 end;
 
 procedure TForm1.RadioButton3Click(Sender: TObject);
 begin
 fORM1.Panel2.Visible:=false;
 Form1.LabeledEdit7.Visible:=true;
+Form1.RadioGroup2.Visible:=false;
+Form1.RadioButton8.Visible:=false;
+Form1.RadioButton9.Visible:=false;
+Form1.RadioButton10.Visible:=false;
+Form1.RadioButton11.Visible:=false;
 end;
 
 procedure TForm1.RadioButton6Click(Sender: TObject);
 begin
 fORM1.Panel2.Visible:=true;
 Form1.LabeledEdit7.Visible:=false;
+Form1.RadioGroup2.Visible:=true;
+Form1.RadioButton8.Visible:=true;
+Form1.RadioButton9.Visible:=true;
+Form1.RadioButton10.Visible:=true;
+Form1.RadioButton11.Visible:=true;
 end;
 
 procedure MethodDescription();
@@ -1285,6 +1149,7 @@ if Form1.Swich1.Checked then begin
   end_row:=StrtoInt(Form1.LabeledEdit4.Text);
   begin_col:=StrtoInt(Form1.LabeledEdit5.Text);
   end_row:=StrToInt(Form1.LabeledEdit6.Text);*)
+
   steps:=StrToInt(Form1.LabeledEdit7.Text);
 
  // Form1.Memo1.Lines.Add('steps:: '+InttoStr(steps));
@@ -1331,21 +1196,17 @@ if Form1.Swich1.Checked then begin
              Form1.Memo1.Lines.Add('bp#3:: end_col>NUMCOL');
              exit;
      end;
-// Form1.Memo1.Lines.Add('  I::'+Inttostr(i)+':: row'+Inttostr( begin_row)+','
-// +Inttostr(end_row)+'  J::'+Inttostr(j)+':: row'+Inttostr( begin_col)+','
-// +Inttostr(end_col));
+
 if Form1.RadioButton1.Checked or Form1.RadioButton2.Checked then
-       fractal();
+        fractal();
 if Form1.RadioButton3.Checked or Form1.RadioButton4.Checked or
    Form1.RadioButton5.Checked or Form1.RadioButton6.Checked then
-fractalEPx();
+        fractalEPx();
 
-      linefit();
-       SetLength(area,0); SetLength(resolution,0);
+        linefit();
+        SetLength(area,0); SetLength(resolution,0);
         fracMTRX[I][j]:=dimension;
-       // Form1.Memo1.Lines.Add(InttoStr(i)+','+Inttostr(j)+
-       // '= '+FloattoStr(fracMTRX[I][j]));
-     // Form1.Memo1.Lines.Add('  ');
+
     END;
                                         end;
       (*time perfomance*)
@@ -1379,8 +1240,6 @@ if Form1.Swich1.Checked then begin
    exit;
    end;
 
- // Form1.Memo1.Lines.Add('steps:: '+InttoStr(steps));
-  (*Define steps:: 1,2,4 -> 1,4,8 frac kernel size*)
   boxside:=steps;
   window_size:=steps-1;
       Form1.Memo1.Lines.Add('steps:: 1..+1.. '+InttoStr(steps));
@@ -1464,11 +1323,24 @@ if Form1.Swich1.Checked then begin
    exit;
    end;
 
- // Form1.Memo1.Lines.Add('steps:: '+InttoStr(steps));
-  (*Define steps:: 1,2,4 -> 1,4,8 frac kernel size*)
-  boxside:=steps;
-  window_size:=steps-1;
-      Form1.Memo1.Lines.Add('steps:: 1..divisors of '+Floattostr(window_size));
+  boxside:=steps; //(*W*)
+  window_size:=steps-1; (*W-1*)
+
+  SetLength(divisors,0);num_divisors:=0;
+   Form1.Memo1.Lines.Add('divisors of Window-1='+Floattostr(window_size)+ '  ::');
+  if window_size>=2 then
+
+  for i := 1 to window_size-1 do
+    begin
+     if window_size mod i =0 then
+     begin
+
+      SetLength(divisors,Length(divisors)+1);
+      divisors[Length(divisors)-1]:=i;
+      Form1.Memo1.Lines.Add('divisor = '+FloattoStr(divisors[Length(divisors)-1]));
+     end;
+    end else begin Form1.Memo1.Lines.Add('Small window. Enter larger!'); exit; end;
+    num_divisors:=length(divisors);
 
      if (NUMROW<boxside) and  (NUMCOL<boxside) then
      begin
