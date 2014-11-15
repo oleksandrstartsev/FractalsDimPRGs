@@ -50,6 +50,8 @@ type
     RadioButton10: TRadioButton;
     RadioButton9: TRadioButton;
     Label4: TLabel;
+    SpeedButton8: TSpeedButton;
+    CheckBox4: TCheckBox;
     procedure ClearButtonClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure FormResize(Sender: TObject);
@@ -63,6 +65,8 @@ type
     procedure RadioButton1Click(Sender: TObject);
     procedure RadioButton2Click(Sender: TObject);
     procedure RadioButton3Click(Sender: TObject);
+    procedure SpeedButton8Click(Sender: TObject);
+    procedure CheckBox4Click(Sender: TObject);
 
   private
     { Private declarations }
@@ -72,8 +76,8 @@ type
 
 var
   Form1: TForm1;
-MAXROW:integer=1025;  {*Upper size limits of array for DEM }
-MAXCOL:integer=1025;  {plus two. Change numbers to suit   }
+MAXROW:integer=14407;  {*Upper size limits of array for DEM }
+MAXCOL:integer=14407;  {plus two. Change numbers to suit   }
 NUMROW:integer;
 NUMCOL:integer;
 area,resolution: array of double;
@@ -97,6 +101,9 @@ rowmax, colmax, steps, begin_row, end_row,begin_col, end_col, timex:integer;
 implementation
 
 {$R *.dfm}
+
+uses Unit2;
+
 
 procedure findPRECISION(firstWord:string);
 Var i,j,k: integer;
@@ -674,7 +681,7 @@ procedure fractal();   //Clarke Method 18-08-1985
 Var	 row, col, step: integer;
     surface_area :double;
  Begin step:= 1;
-       SetLength(area,100);
+       SetLength(area,NUMCOL);
        SetLength(resolution,100);
 (*Repeat for area sequence 1,4,16,64,256 etc. *)
    for timex:=1 to steps do begin
@@ -920,9 +927,15 @@ Begin
    	sumarea:=sumarea+((area[n]-areaavg)*(area[n]-areaavg));
      end;
 (*Compute correlation coefficient and fractal dimension *)
- r:=cross/sqrt(sumres*sumarea);
+
+try
+  r:=cross/sqrt(sumres*sumarea);
   beta:=r*sqrt(sumarea)/sqrt(sumres);
   dimension:=2.0-beta;
+except
+    dimension:=2.0;
+end;
+
    breakpoint1:=true;
 
   (*testing block*)
@@ -972,11 +985,14 @@ Begin
    	sumarea:=sumarea+((area[n]-areaavg)*(area[n]-areaavg));
      end;
 (*Compute correlation coefficient and fractal dimension *)
+try
  r:=cross/sqrt(sumres*sumarea);
   beta:=r*sqrt(sumarea)/sqrt(sumres);
   dimension:=2.0-beta;
    breakpoint1:=true;
-
+ except 
+    dimension:=2.0;
+end;
     (*testing block*)
 (* Form1.Memo1.Lines.Add('');
    Form1.Memo1.Lines.Add('[ >> ** Fractional Dimension= '+FloattoStr(dimension));
@@ -995,6 +1011,15 @@ Begin
      Form1.Memo1.Lines.Add(']');
      *)
 	End;
+
+procedure TForm1.CheckBox4Click(Sender: TObject);
+begin
+if Length(img)<6 then  begin Form1.CheckBox4.Checked:=false;
+ Form1.CheckBox4.ShowHint:=true;
+ Form1.CheckBox4.Hint:='Press "Image", try to grayscale an image';
+end;
+
+end;
 
 procedure TForm1.ClearButtonClick(Sender: TObject);
 begin
@@ -1109,8 +1134,51 @@ Begin
 
 End;
 
+function importImgToMTRX():boolean;
+Var i,j:integer;
+Begin
+  Form1.Memo1.Lines.Add('processing img cashe... ');
+    if tryStrtoInt(Form1.LabeledEdit1.Text,NUMROW)and(NUMROW>0) then begin
+    NUMROW:= StrtoInt(Form1.LabeledEdit1.Text);Form1.LabeledEdit1.Color:=clWhite;
+    end else begin
+     breakpoint1:=false;   Form1.LabeledEdit1.Color:=clRed;
+     exit;
+    end; 
+
+   if tryStrtoInt(Form1.LabeledEdit2.Text,NUMCOL)and(NUMCOL>0) then begin
+    NUMCOL:= StrtoInt(Form1.LabeledEdit2.Text);Form1.LabeledEdit2.Color:=clWhite;
+    end else begin
+     breakpoint1:=false;   Form1.LabeledEdit2.Color:=clRed;
+     exit;
+    end; 
+                   
+  SetLength(matrix,NUMROW,NUMCOL);
+      for i := 0 to Length(matrix)-1 do
+    for j := 0 to Length(matrix[i])-1 do
+      matrix[i][j]:=img[i][j]; 
+    i:=0;
+   Form1.Memo1.Lines.Add('img was imported to matrix '+ 
+   InttoStr(Length(matrix))+ ' x '+ Inttostr(Length(matrix[i])));
+   breakpoint1:=true;
+   importImgToMTRX:=true;
+End;
+
+  procedure readArray();
+ Var correctImg:boolean;
+ begin 
+  if not Form1.CheckBox4.Checked then
+ readdem() else begin
+ correctImg:=false; correctImg:=importImgToMTRX();
+ if not correctImg then begin
+ Form1.Memo1.Lines.Add('incorrect import of image to matrix');
+ exit; 
+ end;
+ end;
+ end;
+
 procedure calculateFracDim();
 VAr i,j: integer;
+
 dimrowfracMTRX,dimcolfracMTRX: integer;
 sliding,boxside:integer;
    frequencyX : Int64;
@@ -1118,13 +1186,6 @@ sliding,boxside:integer;
   endTimeX   : Int64;
   deltaX     : Extended;
 Begin
- (*breakpoint1:=false;
-readdem();
-if breakpoint1 then begin
-center();
-fractal();
-linefit(); end;   *)
-
 (*===========================================*)
 (*           test for different matrx szes   *)
 (*+++++++++++++++++++++++++++++++++++++++++++*)
@@ -1139,7 +1200,8 @@ if (not Form1.RadioButton6.Checked)and
  breakpoint1:=false;
  QueryPerformanceFrequency(frequencyX);
  QueryPerformanceCounter(startTimeX);
- readdem();
+ readArray(); 
+ 
 if breakpoint1 then begin
 // Form1.Memo1.Lines.Add('bp#1:: passed');
 //center();
@@ -1165,8 +1227,8 @@ if Form1.Swich1.Checked then begin
     exit;
      end;
 
-  dimrowfracMTRX:=1+(NUMROW-boxside)-1;
-  dimcolfracMTRX:=1+(NUMCOL-boxside)-1;  (*Define size of frac map matrix:: fracMTRX*)
+  dimrowfracMTRX:=(NUMROW-boxside);
+  dimcolfracMTRX:=(NUMCOL-boxside);  (*Define size of frac map matrix:: fracMTRX*)
      SetLength(fracMTRX,dimrowfracMTRX,dimcolfracMTRX);
      Form1.Memo1.Lines.Add('  fracMTRX allocated '+Inttostr(dimrowfracMTRX)+ ' , '+InttoStr( dimcolfracMTRX));
      (**)
@@ -1227,7 +1289,7 @@ begiN
  breakpoint1:=false;
  QueryPerformanceFrequency(frequencyX);
  QueryPerformanceCounter(startTimeX);
- readdem();
+ readArray();
 if breakpoint1 then begin
 // Form1.Memo1.Lines.Add('bp#1:: passed');
 //center();
@@ -1310,7 +1372,7 @@ end;
     breakpoint1:=false;
  QueryPerformanceFrequency(frequencyX);
  QueryPerformanceCounter(startTimeX);
- readdem();
+ readArray();
 if breakpoint1 then begin
 // Form1.Memo1.Lines.Add('bp#1:: passed');
 //center();
@@ -1571,6 +1633,11 @@ begin
         end;
   Form1.Memo1.Lines.Add(st1);
              end;
+end;
+
+procedure TForm1.SpeedButton8Click(Sender: TObject);
+begin
+Form2.Show;
 end;
 
 end.

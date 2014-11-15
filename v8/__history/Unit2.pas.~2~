@@ -1,0 +1,131 @@
+unit Unit2;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Buttons, Vcl.ExtCtrls, jpeg,
+  Vcl.StdCtrls;
+
+type
+  TForm2 = class(TForm)
+    Image1: TImage;
+    SpeedButton1: TSpeedButton;
+    OpenDialog1: TOpenDialog;
+    Memo1: TMemo;
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure SpeedButton1Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  Form2: TForm2;
+  img:array of array of double;
+
+implementation
+
+{$R *.dfm}
+
+uses FRACPRISMUnit1;
+
+procedure TForm2.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+Form2.Hide;
+Form1.Show;
+end;
+
+{
+  The following function helps you to convert a RGB Color to Grayscale.
+  It works after the american NTSC (National Televisision Standards Committee)
+  system.
+}
+
+
+function GetGreyScale(Color: TColor): TColor;
+var
+  ColorX, R,G,B: Integer;
+begin
+ Color := ColorToRGB (Color);
+  R := Color and $ff;
+  G := (Color and $ff00) shr 8;
+  B := (Color and $ff0000) shr 16;
+  ColorX := Round(R * 0.56 + G * 0.33 + B * 0.11);
+  Result := RGB(ColorX, ColorX, ColorX);
+end;
+
+function ColorToRGBstring(Color: TColor): string;
+var
+  R,G,B : Integer;
+begin
+  R := Color and $ff;
+  G := (Color and $ff00) shr 8;
+  B := (Color and $ff0000) shr 16;
+  result := 'red:' + inttostr(r) + ' green:' + inttostr(g) + ' blue:' + inttostr(b);
+end;
+
+procedure TForm2.SpeedButton1Click(Sender: TObject);
+var
+  bmp: TBitmap;
+  jpg: TJpegImage;
+  scale: Double;
+  I: Integer;
+  J: Integer;
+begin
+{if opendialog1.execute then
+    image1.Picture.LoadFromFile(opendialog1.filename);
+  Form2.Memo1.Lines.Add( Inttostr(image1.Width)+ ' x '
+  +Inttostr(image1.Height));
+  SetLength(img,image1.Width,image1.Height);}
+
+
+  if opendialog1.execute then
+  begin
+    jpg := TJpegImage.Create;
+    try
+      jpg.Loadfromfile(opendialog1.filename);
+      if jpg.Height > jpg.Width then
+        scale := {50 / }jpg.Height
+      else
+        scale := {50 / }jpg.Width;
+      bmp := TBitmap.Create;
+      try
+        {Create thumbnail bitmap, keep pictures aspect ratio}
+        bmp.Width := Round(jpg.Width {* scale});
+        bmp.Height:= Round(jpg.Height {* scale});
+        bmp.Canvas.StretchDraw(bmp.Canvas.Cliprect, jpg);
+  Form2.Memo1.Lines.Add( Inttostr( bmp.Width)+ ' x '
+  +Inttostr( bmp.Height));
+  SetLength(img, bmp.Width, bmp.Height);
+        {Draw thumbnail as control}
+       // Self.Canvas.Draw(150, 10, bmp);
+        {Convert back to JPEG and save to file}
+        jpg.Assign(bmp);
+      {  jpg.SaveToFile(
+          ChangeFileext(opendialog1.filename, '_thumb.JPG')
+        );
+       }
+       bmp.Canvas.Pixels[30,30]:=clRed;
+       for I := 60 to 100{bmp.Width-1} do
+       for J := 60 to 100 {bmp.Height-1} do
+   begin
+   bmp.Canvas.Pixels[i,j]:=GetGreyScale(bmp.Canvas.Pixels[i,j]);
+
+      form2.Memo1.Lines.Add(ColortoString( bmp.Canvas.Pixels[i,j]));
+    end;
+       image1.Picture.Assign(bmp);
+
+      finally
+        bmp.free;
+      end;
+    finally
+      jpg.free;
+    end;
+  end;
+
+
+end;
+
+end.

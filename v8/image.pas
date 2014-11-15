@@ -1,0 +1,65 @@
+unit image;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.Buttons, jpeg,
+  Vcl.StdCtrls;
+
+type
+  TForm2 = class(TForm)
+    SpeedButton1: TSpeedButton;
+    Panel1: TPanel;
+    Image1: TImage;
+    OpenDialog1: TOpenDialog;
+    Memo1: TMemo;
+    procedure SpeedButton1Click(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  Form2: TForm2;
+
+implementation
+
+{$R *.dfm}
+
+uses FRACPRISMUnit1;
+
+procedure TForm2.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+Form1.Show;
+Form2.Hide;
+end;
+
+procedure TForm2.SpeedButton1Click(Sender: TObject);
+Var    Bitmap: TBitmap;
+i,j:integer;
+begin
+
+ if opendialog1.execute then
+    image1.Picture.LoadFromFile(opendialog1.filename);
+
+
+  Bitmap := TBitmap.Create;
+
+  Bitmap.Assign(image1.picture.graphic);
+ Form2.Memo1.Lines.Add('w= '+InttoStr( Bitmap.Width)+ '  ; h= '+
+ InttoStr( Bitmap.Height));
+{ for I := 0 to  Bitmap.Width-1 do
+ for j := 0 to  Bitmap.Height-1 do }
+
+ image1.Canvas.Pixels[10,10]:=clRed;
+  Image1.Picture.Assign(Bitmap);
+  //jpg.SaveToFile('C:\first.jpg');
+
+   Bitmap.free;
+
+end;
+
+end.

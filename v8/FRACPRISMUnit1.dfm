@@ -1,16 +1,18 @@
 object Form1: TForm1
-  Left = 0
+  Left = 244
   Top = 0
   Caption = 'FRAC3D PRISM'
   ClientHeight = 660
-  ClientWidth = 739
+  ClientWidth = 834
   Color = clGray
+  DefaultMonitor = dmDesktop
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  Position = poDesigned
   ShowHint = True
   OnResize = FormResize
   PixelsPerInch = 96
@@ -18,27 +20,33 @@ object Form1: TForm1
   object Panel1: TPanel
     Left = 8
     Top = 8
-    Width = 153
+    Width = 161
     Height = 657
     TabOrder = 0
     object SpeedButton1: TSpeedButton
       Left = 5
       Top = 8
       Width = 145
-      Height = 22
+      Height = 28
       Hint = 'Choose you method and press'
       Caption = 'Calculate with sliding1'
       OnClick = SpeedButton1Click
     end
     object SpeedButton2: TSpeedButton
-      Left = 0
+      Left = 5
       Top = 401
-      Width = 145
+      Width = 148
       Height = 22
       Hint = 
         'Import the IR-data .IS2 file and transform into  .txt with a spe' +
         'cial structure format '
-      Caption = 'Import and transform'
+      Caption = 'Import and transform termograms'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = 11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
       OnClick = SpeedButton2Click
     end
     object ClearButton: TSpeedButton
@@ -77,7 +85,7 @@ object Form1: TForm1
       OnClick = SpeedButton5Click
     end
     object SpeedButton6: TSpeedButton
-      Left = 13
+      Left = 5
       Top = 36
       Width = 58
       Height = 22
@@ -86,7 +94,7 @@ object Form1: TForm1
       OnClick = SpeedButton6Click
     end
     object SpeedButton7: TSpeedButton
-      Left = 77
+      Left = 92
       Top = 36
       Width = 49
       Height = 22
@@ -116,15 +124,23 @@ object Form1: TForm1
       Caption = 'NUMCOL'
     end
     object Label4: TLabel
-      Left = 16
-      Top = 80
-      Width = 76
+      Left = 7
+      Top = 99
+      Width = 115
       Height = 13
-      Caption = 'Geometric step:'
+      Caption = 'Geometric step method:'
+    end
+    object SpeedButton8: TSpeedButton
+      Left = 7
+      Top = 56
+      Width = 56
+      Height = 25
+      Caption = 'Image'
+      OnClick = SpeedButton8Click
     end
     object CheckBox1: TCheckBox
       Left = 13
-      Top = 561
+      Top = 568
       Width = 108
       Height = 17
       Caption = 'Show data saving'
@@ -173,14 +189,16 @@ object Form1: TForm1
       Visible = False
     end
     object Swich1: TCheckBox
-      Left = 13
-      Top = 577
+      Left = 77
+      Top = 584
       Width = 97
       Height = 17
       Caption = 'Swich #1'
       Checked = True
+      Enabled = False
       State = cbChecked
       TabOrder = 4
+      Visible = False
     end
     object ShowInput: TCheckBox
       Left = 13
@@ -219,7 +237,7 @@ object Form1: TForm1
       Top = 429
       Width = 65
       Height = 22
-      MaxValue = 5000
+      MaxValue = 15000
       MinValue = 7
       TabOrder = 8
       Value = 17
@@ -229,24 +247,24 @@ object Form1: TForm1
       Top = 457
       Width = 65
       Height = 22
-      MaxValue = 5000
+      MaxValue = 15000
       MinValue = 7
       TabOrder = 9
       Value = 17
     end
     object RadioGroup1: TRadioGroup
       Left = 0
-      Top = 64
+      Top = 99
       Width = 153
-      Height = 331
+      Height = 303
       Caption = 'Clarke methods'
       TabOrder = 10
     end
     object RadioButton1: TRadioButton
-      Left = 7
-      Top = 92
-      Width = 119
-      Height = 32
+      Left = 8
+      Top = 100
+      Width = 114
+      Height = 37
       Hint = 'step-squared slope'
       Caption = 'classic Clarke'#39's "86'
       Checked = True
@@ -255,18 +273,18 @@ object Form1: TForm1
       OnClick = RadioButton1Click
     end
     object RadioButton2: TRadioButton
-      Left = 6
-      Top = 115
+      Left = 7
+      Top = 128
       Width = 113
-      Height = 17
+      Height = 19
       Hint = 'not step-squared slope'
       Caption = 'Qiu Lam modification'
       TabOrder = 12
       OnClick = RadioButton2Click
     end
     object RadioButton3: TRadioButton
-      Left = 6
-      Top = 130
+      Left = 7
+      Top = 143
       Width = 103
       Height = 32
       Hint = 
@@ -286,8 +304,8 @@ object Form1: TForm1
       TabOrder = 14
     end
     object RadioButton4: TRadioButton
-      Left = 6
-      Top = 153
+      Left = 7
+      Top = 166
       Width = 103
       Height = 17
       Hint = 
@@ -298,8 +316,8 @@ object Form1: TForm1
       OnClick = RadioButton1Click
     end
     object RadioButton5: TRadioButton
-      Left = 6
-      Top = 168
+      Left = 7
+      Top = 181
       Width = 113
       Height = 17
       Hint = 
@@ -344,8 +362,8 @@ object Form1: TForm1
     TabOrder = 1
   end
   object Panel2: TPanel
-    Left = 0
-    Top = 493
+    Left = 8
+    Top = 484
     Width = 161
     Height = 58
     TabOrder = 2
@@ -425,5 +443,14 @@ object Form1: TForm1
     Caption = '8px '
     TabOrder = 7
     Visible = False
+  end
+  object CheckBox4: TCheckBox
+    Left = 20
+    Top = 553
+    Width = 134
+    Height = 17
+    Caption = 'Use cashed image date'
+    TabOrder = 8
+    OnClick = CheckBox4Click
   end
 end
