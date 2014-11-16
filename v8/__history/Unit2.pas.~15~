@@ -1,0 +1,640 @@
+unit Unit2;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Buttons, Vcl.ExtCtrls, jpeg,math,
+  Vcl.StdCtrls, System.UIConsts;
+
+type
+  TForm2 = class(TForm)
+    Image1: TImage;
+    SpeedButton1: TSpeedButton;
+    OpenDialog1: TOpenDialog;
+    Memo1: TMemo;
+    SpeedButton2: TSpeedButton;
+    SpeedButton3: TSpeedButton;
+    SpeedButton4: TSpeedButton;
+    LabeledEdit1: TLabeledEdit;
+    LabeledEdit2: TLabeledEdit;
+    CheckBox1: TCheckBox;
+    Image2: TImage;
+    SpeedButton5: TSpeedButton;
+    Label1: TLabel;
+    Label2: TLabel;
+    Label3: TLabel;
+    Label4: TLabel;
+    Label5: TLabel;
+    CheckBox2: TCheckBox;
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure SpeedButton1Click(Sender: TObject);
+    procedure SpeedButton2Click(Sender: TObject);
+    procedure SpeedButton3Click(Sender: TObject);
+    procedure SpeedButton4Click(Sender: TObject);
+    procedure CheckBox1Click(Sender: TObject);
+    procedure SpeedButton5Click(Sender: TObject);
+    procedure Label1Click(Sender: TObject);
+    procedure Plot();
+    procedure CheckBox2Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  Form2: TForm2;
+  img,arr:array of array of double;
+ bmpx,bmpz, plotlabelx,plotlabelz: TBitmap;
+ HSLRange: integer = 240;
+ labelmarkz,labelmarkx : array[0..5] of string;
+ keyDF: boolean;
+implementation
+
+{$R *.dfm}
+
+uses FRACPRISMUnit1, Unit3;
+ var filenameimg:string;
+
+function HSLtoRGB (H, S, L: double): TColor;    overload;
+var
+  M1, M2: double;
+
+  function HueToColourValue (Hue: double) : byte;
+  var
+    V : double;
+  begin
+    if Hue < 0 then
+      Hue := Hue + 1
+    else
+      if Hue > 1 then
+        Hue := Hue - 1;
+
+    if 6 * Hue < 1 then
+      V := M1 + (M2 - M1) * Hue * 6
+    else
+      if 2 * Hue < 1 then
+        V := M2
+      else
+        if 3 * Hue < 2 then
+          V := M1 + (M2 - M1) * (2/3 - Hue) * 6
+        else
+          V := M1;
+    Result := round (255 * V)
+  end;
+
+var
+  R, G, B: byte;
+begin
+  if S = 0 then
+  begin
+    R := round (255 * L);
+    G := R;
+    B := R
+  end else begin
+    if L <= 0.5 then
+      M2 := L * (1 + S)
+    else
+      M2 := L + S - L * S;
+    M1 := 2 * L - M2;
+    R := HueToColourValue (H + 1/3);
+    G := HueToColourValue (H);
+    B := HueToColourValue (H - 1/3)
+  end;
+
+  Result := RGB (R, G, B)
+end;
+
+function HSLtoRGB (H : Integer; S, L: double): TColor; overload;
+begin
+  Result := HSLtoRGB( H / 360, S, L);
+end;
+
+function HSLtoRGB (H, S, L: Integer): TColor; overload;
+begin
+  Result := HSLtoRGB(H,S / 100, L / 100);
+end;
+
+function HSLRangeToRGB (H, S, L : integer): TColor;
+begin
+  Result := HSLToRGB (H / (HSLRange-1), S / HSLRange, L / HSLRange)
+end;
+
+// Convert RGB value (0-255 range) into HSL value (0-1 values)
+
+procedure RGBtoHSL (RGB: TColor; var H, S, L : double);
+
+  function Max (a, b : double): double;
+  begin
+    if a > b then
+      Result := a
+    else
+      Result := b
+  end;
+
+  function Min (a, b : double): double;
+  begin
+    if a < b then
+      Result := a
+    else
+      Result := b
+  end;
+
+var
+  R, G, B, D, Cmax, Cmin: double;
+begin
+  R := GetRValue (RGB) / 255;
+  G := GetGValue (RGB) / 255;
+  B := GetBValue (RGB) / 255;
+  Cmax := Max (R, Max (G, B));
+  Cmin := Min (R, Min (G, B));
+
+// calculate luminosity
+  L := (Cmax + Cmin) / 2;
+
+  if Cmax = Cmin then  // it's grey
+  begin
+    H := 0; // it's actually undefined
+    S := 0
+  end else begin
+    D := Cmax - Cmin;
+
+// calculate Saturation
+    if L < 0.5 then
+      S := D / (Cmax + Cmin)
+    else
+      S := D / (2 - Cmax - Cmin);
+
+// calculate Hue
+    if R = Cmax then
+      H := (G - B) / D
+    else
+      if G = Cmax then
+        H  := 2 + (B - R) /D
+      else
+        H := 4 + (R - G) / D;
+
+    H := H / 6;
+    if H < 0 then
+      H := H + 1
+  end
+end;
+
+procedure RGBtoHSLRange (RGB: TColor; var H, S, L : integer);
+var
+  Hd, Sd, Ld: double;
+begin
+  RGBtoHSL (RGB, Hd, Sd, Ld);
+  H := round (Hd * (HSLRange-1));
+  S := round (Sd * HSLRange);
+  L := round (Ld * HSLRange);
+end;
+
+
+procedure TForm2.CheckBox1Click(Sender: TObject);
+begin
+if Form2.CheckBox1.Checked then  keyDf:=Form2.CheckBox2.Checked;
+
+ Form2.SpeedButton4Click(Sender);
+end;
+
+procedure TForm2.CheckBox2Click(Sender: TObject);
+begin
+if not Form2.CheckBox2.Checked then
+begin
+keyDf:=false;
+  Form2.Image1.Picture.Assign(bmpz);
+  Form2.Image2.Picture.Assign(plotlabelz);
+     Form2.Label1.Caption:= labelmarkz[0];
+     Form2.Label2.Caption:= labelmarkz[1];
+     Form2.Label3.Caption:= labelmarkz[2];
+     Form2.Label4.Caption:= labelmarkz[3];
+     Form2.Label5.Caption:= labelmarkz[4];
+end else begin
+keyDf:=true;
+  Form2.Image1.Picture.Assign(bmpx);
+  Form2.Image2.Picture.Assign(plotlabelx);
+   Form2.Label1.Caption:= labelmarkx[0];
+     Form2.Label2.Caption:= labelmarkx[1];
+     Form2.Label3.Caption:= labelmarkx[2];
+     Form2.Label4.Caption:= labelmarkx[3];
+     Form2.Label5.Caption:= labelmarkx[4];
+end;
+end;
+
+procedure TForm2.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+Form2.Hide;
+Form1.Show;
+Application.Terminate;
+end;
+
+procedure TForm2.Label1Click(Sender: TObject);
+begin
+
+end;
+
+{
+  The following function helps you to convert a RGB Color to Grayscale.
+  It works after the american NTSC (National Televisision Standards Committee)
+  system.
+}
+
+
+function getGreyScale(Color: TColor): TColor;
+var
+   R,G,B: Integer;
+begin
+ Color := ColorToRGB (Color);
+  R := Color and $ff;
+  G := (Color and $ff00) shr 8;
+  B := (Color and $ff0000) shr 16;
+  //  NTSC (National Televisision Standards Committee) standart;
+ Color := Round(R * 0.56 + G * 0.33 + B * 0.11);
+// Color := Round(R * 0.3 + G * 0.59 + B * 0.11);  //Weighted method or luminosity method
+  Result := RGB(Color, Color, Color);
+end;
+
+function getGreyScalePixel(Color: TColor): double;
+var
+   R,G,B: Integer;
+begin
+ Color := ColorToRGB (Color);
+  R := Color and $ff;
+  G := (Color and $ff00) shr 8;
+  B := (Color and $ff0000) shr 16;
+  //  NTSC (National Televisision Standards Committee) standart;
+ Result := Round(R * 0.56 + G * 0.33 + B * 0.11);
+end;
+
+procedure TForm2.Plot();
+var i,j,colorpx:integer;
+mx1,mn1: double;
+bmpp, plotlabelp: Tbitmap;
+Begin
+  if (Length(arr)>0) then
+begin
+  mx1:=math.MinDouble; mn1:=math.MaxDouble;
+ for I := 0 to length(arr)-1 do
+   begin
+   if math.MaxValue(arr[i])> mx1 then
+   mx1:=math.MaxValue(arr[i]);
+   if math.MinValue(arr[i])<mn1 then
+   mn1:=math.MinValue(arr[i]);
+   end;
+ Form2.Memo1.Lines.Add('max, min//arr= '+ FloattoStr(mx1)+ ' , '+FloattoStr(mn1));
+
+ bmpp := TBitmap.Create;
+ plotlabelp:=TBitmap.Create;
+
+  plotlabelp.Width:=256;
+  plotlabelp.Height:=30;
+  for i := 0 to plotlabelp.Width-1 do
+    for j := 0 to plotlabelp.Height-1 do
+    if Form2.CheckBox1.Checked then
+    begin
+    if (j<5) or (j>25) then   plotlabelp.Canvas.Pixels[i,j]:=clWhite else
+      plotlabelp.Canvas.Pixels[i,j]:=HSLtoRGB(
+       (255-i)/360,1,0.55) end else begin
+   if (j<5) or (j>25) then   plotlabelp.Canvas.Pixels[i,j]:=clWhite else
+     plotlabelp.Canvas.Pixels[i,j]:=RGB(
+      Round((i)),i,i); end;
+
+
+
+ i:=0;
+   bmpp.Width := Round(length(arr));
+   bmpp.Height:= Round(length(arr[i]));
+  for I := 0 to bmpp.Width-1 do
+  for j := 0 to  bmpp.Height-1 do
+     begin
+     colorpx:= Round(255- 255*((arr[i,j]-mn1)/(mx1-mn1)));
+     if not keyDf then begin
+
+    labelmarkz[0]:=FloattoStrf(mn1,ffFixed,5,3);
+    labelmarkz[1]:=FloattoStrf(mn1+0.25*(mx1-mn1),ffFixed,5,3);
+    labelmarkz[2]:=FloattoStrf(mn1+0.5*(mx1-mn1),ffFixed,5,3);
+    labelmarkz[3]:=FloattoStrf(mn1+0.75*(mx1-mn1),ffFixed,5,3);
+    labelmarkz[4]:=FloattoStrf(mx1,ffFixed,5,3);
+
+     Form2.Label1.Caption:= labelmarkz[0];
+     Form2.Label2.Caption:= labelmarkz[1];
+     Form2.Label3.Caption:= labelmarkz[2];
+     Form2.Label4.Caption:= labelmarkz[3];
+     Form2.Label5.Caption:= labelmarkz[4];
+     end else begin
+        labelmarkx[0]:=FloattoStrf(mn1,ffFixed,5,3);
+    labelmarkx[1]:=FloattoStrf(mn1+0.25*(mx1-mn1),ffFixed,5,3);
+    labelmarkx[2]:=FloattoStrf(mn1+0.5*(mx1-mn1),ffFixed,5,3);
+    labelmarkx[3]:=FloattoStrf(mn1+0.75*(mx1-mn1),ffFixed,5,3);
+    labelmarkx[4]:=FloattoStrf(mx1,ffFixed,5,3);
+
+     Form2.Label1.Caption:= labelmarkx[0];
+     Form2.Label2.Caption:= labelmarkx[1];
+     Form2.Label3.Caption:= labelmarkx[2];
+     Form2.Label4.Caption:= labelmarkx[3];
+     Form2.Label5.Caption:= labelmarkx[4];
+     end;
+
+     if Form2.CheckBox1.Checked then
+    //bmpx.Canvas.Pixels[i,j]:=RGB(round(colorpx/0.21),
+    //round((redd+colorpx)/0.72),
+    //round((greenn+colorpx)/0.07))
+    bmpp.Canvas.Pixels[i,j]:=HSLtoRGB(colorpx/360,
+      1,0.5)
+    //   bmpx.Canvas.Pixels[i,j]:=RGB(round(colorpx/0.3),
+    //   round((redd+colorpx)/0.59),
+    //   round((greenn+colorpx)/0.11))
+    else
+     bmpp.Canvas.Pixels[i,j]:=RGB(255-colorpx,255-colorpx,255-colorpx);
+
+     end;
+     if keyDF then  begin
+     bmpx:= TBitmap.Create; bmpx:=bmpp;
+   Form2.image1.Picture.Assign(bmpp);
+   plotlabelx:= TBitmap.Create;
+   plotlabelx:=plotlabelp;
+   Form2.image2.Picture.Assign(plotlabelx);
+
+ //  bmpp.Free;
+    end else begin
+      bmpz:= TBitmap.Create; bmpz:=bmpp;
+     Form2.image1.Picture.Assign(bmpz) ;
+     plotlabelz:= TBitmap.Create;
+     plotlabelz:=plotlabelp;
+   Form2.image2.Picture.Assign(plotlabelz);
+ //    bmpp.Free;
+   end;
+  end else
+ VCL.Dialogs.MessageDlg('Inconsistent data//array !',
+          mtWarning, [mbOk], 0);
+
+
+End;
+
+
+procedure TForm2.SpeedButton1Click(Sender: TObject);
+var
+
+  jpg: TJpegImage;
+  I, ButtonSelected,ButtonSelectedMTRX: Integer;
+  J: Integer;
+begin
+   buttonSelected := VCL.Dialogs.MessageDlg('Load a new file for processing?',
+   mtConfirmation,
+   [mbYes,mbNo,mbCancel], 0);
+
+if buttonSelected = mrYes    then begin
+  if opendialog1.execute then
+  begin
+    jpg := TJpegImage.Create;
+    try
+      jpg.Loadfromfile(opendialog1.filename);
+      filenameimg:=opendialog1.filename;
+      bmpz := TBitmap.Create;
+      try
+
+        bmpz.Width :=jpg.Width  {* scale};
+        bmpz.Height:= jpg.Height {* scale};
+        bmpz.Canvas.StretchDraw(bmpz.Canvas.Cliprect, jpg);
+  Form2.Memo1.Lines.Add( Inttostr( bmpz.Width)+ ' x '
+  +Inttostr( bmpz.Height));
+  SetLength(img, bmpz.Width, bmpz.Height);
+         jpg.Assign(bmpz);
+
+      {  jpg.SaveToFile(
+          ChangeFileext(opendialog1.filename, '_thumb.JPG')
+        );
+       }
+      // bmp.Canvas.Pixels[30,30]:=clRed;
+       for I :=  0 to bmpz.Width-1 do
+       for J := 0 to bmpz.Height-1 do
+   begin
+   img[i,j]:=getGreyScalePixel(bmpz.Canvas.Pixels[i,j]);
+   bmpz.Canvas.Pixels[i,j]:=GetGreyScale(bmpz.Canvas.Pixels[i,j]);
+   if i div 5 =0 then Application.ProcessMessages;
+
+    end;
+     ButtonSelectedMTRX := VCL.Dialogs.MessageDlg('Do you want to use image data to calculate the fractal dimension map?',
+          mtConfirmation, [mbYes,mbNo], 0);
+   if  ButtonSelectedMTRX=mrYes then  begin
+     Form1.LabeledEdit1.Value:=bmpz.Width;
+     Form1.LabeledEdit2.Value:=bmpz.Height;
+     Form1.CheckBox4.Checked:=true;
+     end;
+
+          jpg.Assign(bmpz);
+          Form3.image1.Width:=bmpz.Width;
+          Form3.Image1.Height:=bmpz.Height;
+          Form3.Width:=700;
+          Form3.Height:=460;
+          Form3.image1.Picture.Assign(bmpz);
+          image1.Picture.Assign(bmpz);
+          Form3.Show;
+
+
+
+      finally
+
+
+      end;
+    finally
+      jpg.free;
+    end;
+  end;
+
+end;
+
+if (buttonSelected = mrNo) and (length(filenameimg)>0)   then begin
+
+  jpg := TJpegImage.Create;
+    try
+      jpg.Loadfromfile(filenameimg);
+      bmpz := TBitmap.Create;
+      try
+
+        bmpz.Width :=jpg.Width  {* scale};
+        bmpz.Height:= jpg.Height {* scale};
+        bmpz.Canvas.StretchDraw(bmpz.Canvas.Cliprect, jpg);
+  Form2.Memo1.Lines.Add( Inttostr( bmpz.Width)+ ' x '
+  +Inttostr( bmpz.Height));
+  SetLength(img, bmpz.Width, bmpz.Height);
+         jpg.Assign(bmpz);
+
+      {  jpg.SaveToFile(
+          ChangeFileext(opendialog1.filename, '_thumb.JPG')
+        );
+       }
+      // bmp.Canvas.Pixels[30,30]:=clRed;
+       for I :=  0 to bmpz.Width-1 do
+       for J := 0 to bmpz.Height-1 do
+   begin
+   img[i,j]:=getGreyScalePixel(bmpz.Canvas.Pixels[i,j]);
+   bmpz.Canvas.Pixels[i,j]:=GetGreyScale(bmpz.Canvas.Pixels[i,j]);
+   if i div 5 =0 then Application.ProcessMessages;
+
+    end;
+     ButtonSelectedMTRX := VCL.Dialogs.MessageDlg('Do you want to use image data to calculate the fractal dimension map?',
+          mtConfirmation, [mbYes,mbNo], 0);
+   if  ButtonSelectedMTRX=mrYes then  begin
+     Form1.LabeledEdit1.Value:=bmpz.Width;
+     Form1.LabeledEdit2.Value:=bmpz.Height;
+     Form1.CheckBox4.Checked:=true;
+     end;
+
+          jpg.Assign(bmpz);
+          Form3.image1.Width:=bmpz.Width;
+          Form3.Image1.Height:=bmpz.Height;
+          Form3.Width:=700;
+          Form3.Height:=460;
+          Form3.image1.Picture.Assign(bmpz);
+          image1.Picture.Assign(bmpz);
+          Form3.Show;
+      finally
+
+      end;
+    finally
+      jpg.free;
+    end;
+end;
+if buttonSelected = mrCancel    then exit;
+
+end;
+
+procedure TForm2.SpeedButton2Click(Sender: TObject);
+Var saveDialog : TSaveDialog;
+ buttonSelected,i,j : Integer;
+selectedsaveFile2 : string;
+  myFile2,mysaveFile2 : TextFile;
+ s1:string;
+begin
+if Length(img)>0 then BEGIN
+
+       buttonSelected := VCL.Dialogs.MessageDlg('Save to new file?',mtCustom,
+   [mbYes,mbCancel], 0);
+
+if buttonSelected = mrYes    then begin
+  saveDialog := TSaveDialog.Create(Form2);
+   saveDialog.Title := 'Save your  data into new file';
+ saveDialog.InitialDir := GetCurrentDir;
+ saveDialog.Filter := 'dat file for Wolfram@Math import [x,y,z]|.dat|txt file [only z-values] |.txt';
+ saveDialog.DefaultExt := 'dat';
+  saveDialog.FilterIndex := 1;
+
+  if saveDialog.Execute
+  then ShowMessage('File : '+saveDialog.FileName)
+  else begin ShowMessage('Data saving was cancelled'); exit; end;
+
+  selectedsavefile2:=saveDialog.FileName;
+saveDialog.Free; end;
+
+ if buttonSelected = mrCancel then exit;
+
+      AssignFile(mysavefile2,selectedsaveFile2); Rewrite(mysavefile2);
+       FormatSettings.DecimalSeparator:='.';
+   if saveDialog.FilterIndex=1 then   begin
+ for I := 0 to Length(img)-1 do
+   for J := 0 to Length(img[i])-1 do
+     begin
+    WriteLn(mysavefile2,FloatToStrf(i+1,ffFixed,4,1)+'  '+
+    FloatToStrf(j+1,ffFixed,4,1)+'  '+FloatToStrf(img[i,j],ffFixed,6,4));
+
+     end; end;
+  if saveDialog.FilterIndex=2 then   begin
+ for I := 0 to Length(img)-1 do
+ begin  s1:='';
+   for J := 0 to Length(img[i])-1 do
+     begin s1:=s1+'  '+FloatToStrf(img[i,j],ffFixed,4,1);
+
+     end;  WriteLn(mysavefile2,s1);   end;    end;
+
+          FormatSettings.DecimalSeparator:=',';
+       CloseFile(mysaveFile2);
+
+                  END;
+
+end;
+
+procedure TForm2.SpeedButton3Click(Sender: TObject);
+Var
+  jpg: TJpegImage;
+  scale: Double;
+  I: Integer;
+  J: Integer;
+begin
+
+  if opendialog1.execute then
+  begin
+    jpg := TJpegImage.Create;
+    try
+      jpg.Loadfromfile(opendialog1.filename);
+      filenameimg:=opendialog1.filename;
+      if jpg.Height > jpg.Width then
+        scale := {240 /} jpg.Height
+      else
+        scale := {320 / }jpg.Width;
+      bmpz := TBitmap.Create;
+      try
+        {Create thumbnail bitmap, keep pictures aspect ratio}
+        bmpz.Width := Round(jpg.Width  {* scale});
+        bmpz.Height:= Round(jpg.Height {* scale});
+        bmpz.Canvas.StretchDraw(bmpz.Canvas.Cliprect, jpg);
+       // jpg.Assign(bmp);
+  Form2.Memo1.Lines.Add( Inttostr( bmpz.Width)+ ' x '
+  +Inttostr( bmpz.Height));
+  SetLength(img, bmpz.Width, bmpz.Height);
+  image1.Picture.Assign(bmpz);
+
+      finally
+
+      end;
+    finally
+      jpg.free;
+    end;
+  end;
+
+end;
+
+procedure TForm2.SpeedButton4Click(Sender: TObject);
+var i,j,colorpx,redd,greenn:integer;
+mx1,mn1: double;
+
+begin
+if (Length(fracMTRX)>0) then
+begin
+     i:=0;
+     SetLength(arr,Length(fracMTRX),Length(fracMTRX[i]));
+        for i := 0 to Length(fracMTRX)-1 do
+        for j := 0 to Length(fracMTRX[i])-1 do
+       arr[i][j]:=fracMTRX[i][j];
+       keyDF:=true;
+         Form2.Plot();
+
+end else
+ VCL.Dialogs.MessageDlg('Inconsistent data//fracMTRX!',
+          mtWarning, [mbOk], 0);
+
+        if (Length(matrix)>0) then
+begin
+     i:=0;
+     SetLength(arr,Length(matrix),Length(matrix[i]));
+        for i := 0 to Length(matrix)-1 do
+        for j := 0 to Length(matrix[i])-1 do
+       arr[i][j]:=matrix[i][j];
+       keyDF:=false;
+         Form2.Plot();
+
+end else
+ VCL.Dialogs.MessageDlg('Inconsistent data!',
+          mtWarning, [mbOk], 0);
+        //  Form3.Show;
+
+end;
+
+procedure TForm2.SpeedButton5Click(Sender: TObject);
+begin
+Form3.Show;
+end;
+
+end.

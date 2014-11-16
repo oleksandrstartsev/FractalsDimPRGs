@@ -67,6 +67,7 @@ type
     procedure RadioButton3Click(Sender: TObject);
     procedure SpeedButton8Click(Sender: TObject);
     procedure CheckBox4Click(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
 
   private
     { Private declarations }
@@ -1026,6 +1027,12 @@ begin
 Form1.Memo1.Lines.Clear;
 end;
 
+procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+bmpx.Free;
+bmpz.Free;
+end;
+
 procedure TForm1.FormResize(Sender: TObject);
 begin
  Form1.Memo1.Width:=round(Form1.Width*0.73);
@@ -1500,11 +1507,49 @@ end;
 
 
 procedure TForm1.SpeedButton1Click(Sender: TObject);
+Var buttonS,i,j: integer;
 begin
  Form1.Memo1.Lines.Add('');
  Form1.Memo1.Lines.Add('(*========================================*)');
 
    calculateFracDim();
+  buttonS := VCL.Dialogs.MessageDlg('Do you want to creat an images of loaded array and frac map?',mtCustom,
+   [mbYes,mbNO], 0);
+
+   if buttonS=mrYes then
+   begin
+   
+     if (Length(fracMTRX)>0) then
+begin
+     i:=0;
+     SetLength(arr,Length(fracMTRX),Length(fracMTRX[i]));
+        for i := 0 to Length(fracMTRX)-1 do
+        for j := 0 to Length(fracMTRX[i])-1 do
+       arr[i][j]:=fracMTRX[i][j];
+       keyDF:=true;
+         Form2.Plot();
+
+end else
+ VCL.Dialogs.MessageDlg('Inconsistent data//fracMTRX!',
+          mtWarning, [mbOk], 0);
+
+        if (Length(matrix)>0) then
+begin
+     i:=0;
+     SetLength(arr,Length(matrix),Length(matrix[i]));
+        for i := 0 to Length(matrix)-1 do
+        for j := 0 to Length(matrix[i])-1 do
+       arr[i][j]:=matrix[i][j];
+       keyDF:=false;
+         Form2.Plot();
+
+end else
+ VCL.Dialogs.MessageDlg('Inconsistent data//matrix!',
+          mtWarning, [mbOk], 0);
+
+          
+   end;
+     
 end;
 
 

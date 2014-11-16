@@ -14,6 +14,7 @@ object Form1: TForm1
   OldCreateOrder = False
   Position = poDesigned
   ShowHint = True
+  OnClose = FormClose
   OnResize = FormResize
   PixelsPerInch = 96
   TextHeight = 13
