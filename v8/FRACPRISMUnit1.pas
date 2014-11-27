@@ -1031,6 +1031,7 @@ procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
 bmpx.Free;
 bmpz.Free;
+Application.Terminate;
 end;
 
 procedure TForm1.FormResize(Sender: TObject);

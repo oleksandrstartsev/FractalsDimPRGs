@@ -230,7 +230,7 @@ procedure TForm2.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
 Form2.Hide;
 Form1.Show;
-Application.Terminate;
+
 end;
 
 procedure TForm2.LabeledEdit2Change(Sender: TObject);
