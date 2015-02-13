@@ -7,10 +7,5 @@ I used Clarke's method as a basic method, then added sliding window, different v
 </blockquote>
 </div>
 
+<div> If you have some questions, do not hesitate to contact me via e-mail startsev-alex@ukr.net </div>
 
-    <p> 
-If you have some questions, do not hesitate to contact me via e-mail startsev-alex@ukr.net 
-    </p>
-    <footer> 
-
-    </footer>
