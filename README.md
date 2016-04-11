@@ -1,4 +1,4 @@
-<div><b> Alex Startsev. Calculation of fractal maps of arrays and images for thermograms. IERT NAS of Ukraine, Kharkiv, 2014. </b></div>
+<div><b> Alex Startsev. Calculation of fractal maps for data sets. IERT NAS of Ukraine, Kharkiv, 2014. </b></div>
 <div> About. 
 <blockquote>
 <p>There are few folders with the latest versions of working programs for calculation of fractal dimensions of arrays.
